@@ -5,8 +5,9 @@ import { tryParseMoney } from '../../core/money';
 import { useApp, useModel } from '../../state/store';
 import { Card, CardTitle, Empty } from '../components/ui';
 import { fmtDate, fmtMonthShort, formatEUR, plural } from '../lib/format';
+import { StatementImport } from './StatementImport';
 
-/** Import history (SPEC §4.8, M2–M4: read-only). */
+/** Import (SPEC §4.8): import a statement on this device (M5), coverage and history. */
 export function ImportHistory() {
   const m = useModel();
   const source = useApp((s) => s.source);
@@ -44,8 +45,10 @@ export function ImportHistory() {
         >
           <ChevronLeft size={22} />
         </Link>
-        <h1 className="text-xl font-semibold">Imports</h1>
+        <h1 className="text-xl font-semibold">Import</h1>
       </div>
+
+      <StatementImport />
 
       <Card>
         <CardTitle>Coverage</CardTitle>
@@ -118,14 +121,14 @@ export function ImportHistory() {
       </Card>
 
       <Card>
-        <CardTitle>Import a new statement</CardTitle>
+        <CardTitle>Or use an ingest session</CardTitle>
         <ol className="list-decimal space-y-1 px-8 pb-4 text-sm text-ink-2">
           <li>CGD app → movements → export PDF.</li>
           <li>
             Open a Claude session on your data repo with a cheaper model, attach the PDF and say “ingest this
-            statement”.
+            statement”. It also suggests categories and trips.
           </li>
-          <li>Come back here: the new rows arrive on the next sync.</li>
+          <li>Come back here: the new rows arrive on the next sync. Both ways give the same rows and ids.</li>
         </ol>
         {repoUrl && (
           <a

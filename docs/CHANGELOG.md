@@ -3,6 +3,47 @@
 All notable changes to Mealheiro. Each milestone lists what shipped and any decision taken where the spec
 was silent (CLAUDE.md "Working style").
 
+## M5: In-app import (2026-11-25)
+
+### Shipped
+
+- **Import a statement on the phone** (More → Import): pick a file or share the PDF from the CGD app straight
+  to Mealheiro (Android share target). The file is read on the device; pdf.js extracts the text in its own
+  worker, served from this origin.
+- **CGD PDF:** a TypeScript port of `reference/parse_cgd.py`. It gives rows and ids identical to
+  `fixtures/cgd/expected.csv`, with the same balance-chain and closing-balance checks.
+- **Preview before saving:** in the file, new, already here, the balance checks, the "missing transactions?"
+  gap warning, rows left out, and how many new rows no rule covers. You can pick the account. A statement
+  that fails a check saves nothing, and Mealheiro never adjusts numbers.
+- **Append-only import op.** New rows go into their booking-month files and the file is logged in
+  `imports.csv`, all in one commit. Into an empty repo this writes month files byte for byte the same as
+  `mh.py ingest`. Importing the same file again, or a statement an ingest session already pushed, adds
+  nothing. The import waits in the pending-ops queue like any edit, so it survives going offline.
+- **Revolut CSV:** only completed EUR rows are imported. A fee becomes its own row, suggested as Bank fees,
+  and top-ups are suggested as Transfer to/from Revolut. The balance chain is checked in completion order.
+  After the first import the app offers to mark the account as tracked.
+- **PayPal CSV (enrichment):** each "PayPal Europe" outflow on CGD is matched to a PayPal payment with the
+  same amount within 3 days. The rules suggest a category from the PayPal name. Saving sets the category
+  and adds "PayPal: name" to the note.
+- **Tests:**
+  - the CGD parser, with pdf.js in Node, against `expected.csv`, a broken chain, and an unreadable row
+  - import into an empty repo, re-import, an overlapping statement, and the gap warning
+  - the import through sync, including when an ingest session pushed first
+  - Revolut and PayPal parsing with synthetic fixtures
+  - Playwright: PDF, Revolut and PayPal flows, plus the share target through the service worker
+
+### Decisions
+
+- **No data contract change.** Imports write only columns that already exist. A Revolut fee row and top-up
+  carry `category_suggested` with `suggested_by=import`. PayPal names go in the override note, because
+  overrides have no merchant column.
+- **Revolut rows in another currency are left out**, and the preview says how many. Mealheiro would need
+  their EUR amount, and the owner's first real export will show how to get it (IMPORT_FORMATS §3).
+- **A file with nothing new is not logged.** `mh.py ingest` logs it anyway. This makes no difference to
+  rows or ids.
+- **Revolut and PayPal formats are written against IMPORT_FORMATS**, not a real export. Expect a small
+  adjustment after the owner's first real file.
+
 ## M4: Events, budgets, goals (2026-11-25)
 
 ### Shipped

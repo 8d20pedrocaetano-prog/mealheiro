@@ -10,7 +10,7 @@ import { buildModel, type Model } from '../core/model';
 import { parseSettings, type RootFile, type Settings, APP_WRITABLE } from '../core/schema';
 import { isValidPin, seal, unseal } from '../sync/crypto';
 import { GitHub, GitHubError, type RepoRef } from '../sync/github';
-import { applyOps, applyOp, commitMessage, serializeTable, type Op } from '../sync/ops';
+import { applyImport, applyOp, applyOps, commitMessage, serializePath, type Op } from '../sync/ops';
 import {
   addOp,
   getConnection,
@@ -83,6 +83,7 @@ function toOp(s: StoredOp): Op {
     row: s.row,
     at: s.at,
     label: s.label,
+    ...(s.txns ? { txns: s.txns } : {}),
   };
 }
 
@@ -229,8 +230,11 @@ export const useApp = create<AppState>((set, get) => {
     },
 
     async commit(partial) {
-      // File ownership (DATA_MODEL §2): the app writes only user-owned root files, never transactions/**.
-      const bad = partial.find((p) => !APP_WRITABLE.includes(p.file));
+      // File ownership (DATA_MODEL §2): the app writes only user-owned root files. transactions/** and
+      // imports.csv change only through an import op, which appends and never rewrites a row.
+      const bad = partial.find((p) =>
+        p.kind === 'import' ? p.file !== 'imports.csv' : !APP_WRITABLE.includes(p.file),
+      );
       if (bad) throw new Error(`The app may not write ${bad.file}`);
       const at = nowLocalTimestamp();
       const ops: Op[] = partial.map((p) => ({ ...p, id: crypto.randomUUID(), at }));
@@ -262,12 +266,28 @@ export const useApp = create<AppState>((set, get) => {
             const files = toFileMap(await readAllFiles());
             let tables = parseTables(files);
             const ops = stored.map(toOp);
-            const touched = new Set<RootFile>();
+            const touched = new Set<string>();
             for (const op of ops) {
-              tables = new Map(tables).set(op.file, applyOp(tables.get(op.file), op));
-              touched.add(op.file);
+              tables = new Map(tables);
+              if (op.kind === 'import') for (const p of applyImport(tables, op)) touched.add(p);
+              else {
+                tables.set(op.file, applyOp(tables.get(op.file), op));
+                touched.add(op.file);
+              }
             }
-            const changed = [...touched].map((f) => ({ path: f, text: serializeTable(tables.get(f)!, f) }));
+            const changed = [...touched]
+              .map((f) => ({ path: f, text: serializePath(tables.get(f)!, f) }))
+              .filter((c) => c.text !== files[c.path]);
+            if (!changed.length) {
+              // e.g. an import an ingest session already pushed: nothing left to write.
+              await removeOps(stored.map((s) => s.seq!));
+              const done = new Set(ops.map((o) => o.id));
+              setFiles(
+                files,
+                get().ops.filter((o) => !done.has(o.id)),
+              );
+              break;
+            }
             try {
               const blobs = await Promise.all(
                 changed.map(async (c) => ({ ...c, sha: await gh.createBlob(c.text) })),

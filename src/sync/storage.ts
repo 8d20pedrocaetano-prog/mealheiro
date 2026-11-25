@@ -17,11 +17,13 @@ export interface StoredOp {
   seq?: number;
   id: string;
   file: string;
-  kind: 'upsert' | 'delete';
+  kind: 'upsert' | 'delete' | 'import';
   key: Record<string, string>;
   row?: Record<string, string>;
   at: string;
   label: string;
+  /** `import` ops carry the statement rows. */
+  txns?: Record<string, string>[];
 }
 
 interface Schema extends DBSchema {

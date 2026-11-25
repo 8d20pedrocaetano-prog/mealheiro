@@ -37,7 +37,7 @@ test.describe('demo mode smoke test', () => {
       .getByRole('link', { name: /Imports/ })
       .first()
       .click();
-    await expect(page.getByRole('heading', { name: /Imports/ })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Import', exact: true })).toBeVisible();
     expect(errors).toEqual([]);
   });
 

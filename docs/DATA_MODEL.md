@@ -79,7 +79,10 @@ open stage), budget (money, optional), color, source (detector|claude|user), not
 for that field. Applies to imported and manual transactions.
 
 ### manual.csv
-`id (m-<uuid>), account_id, date, description, amount, currency, category_id, event_id, note, created_at`.
+`id (m-<uuid>), account_id, date, description, amount, currency, category_id, event_id, note, created_at,
+linked_txn_id`.
+`linked_txn_id` (optional) is the imported cash withdrawal that this cash entry itemises (SPEC §4.2 "What was this
+cash for?"). It is for display only ("€25 of €40 itemised") and has no effect on any calculation.
 Treated as a transaction with `booking_date = value_date = date`, no balance, `category_suggested = category_id`.
 Quick add only offers accounts with no imports (cash, untracked Revolut…) to avoid double counting.
 

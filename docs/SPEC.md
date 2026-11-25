@@ -67,6 +67,15 @@ or `12 Mar`. UI language English.
   - Assign to event / remove from event.
   - Mark as **payback for…** (pick the expense it offsets; sets `reimburses_txn_id` and copies its category).
   - Add note; exclude from analysis (with reason).
+  - **What was this cash for?** (cash withdrawals only: rows whose category is `cash-withdrawal`). Opens a
+    sheet with one line pre-filled with the full amount: pick a category (same grid as Quick add) and save. "Split"
+    adds lines (category + amount, optional note and event); whatever isn't assigned stays unitemized cash. Each
+    line is saved as a `manual.csv` row on the `cash` account, dated the withdrawal's value date, with
+    `linked_txn_id` = the withdrawal's id. The row and the sheet then show "€25 of €40 itemised"; tapping again
+    edits or removes the lines.
+- **AC (cash):** itemising 15,50 € of a 60 € withdrawal as Restaurants moves 15,50 € from Unitemized to Restaurants
+  in that month (DATA_MODEL §6), leaves the month's Spent unchanged, takes ≤ 3 taps for the one-category case, and
+  works offline.
 - **AC:** changing a category updates every total on every screen immediately (optimistic), queues one override
   write, and survives an offline reload.
 
@@ -143,6 +152,9 @@ A queue of things that need the owner, each resolvable in one or two taps, one c
 4. **Pass-through?**: equal in/out pair on the same day → link both to one category.
 5. **Proposed events** (from §4.5).
 6. **PayPal unknowns** (until PayPal enrichment exists, M5).
+7. **Cash (optional)**: cash withdrawals from the latest import that aren't itemised yet, with "What was it for?"
+   (the §4.2 sheet) or "Skip" (stays unitemized; never asked again). These cards don't count towards the More
+   badge and never block "inbox clear".
 
 **AC:** clearing the inbox on the owner's first real import (≈80 items) takes under 10 minutes on the phone.
 
@@ -151,6 +163,11 @@ A queue of things that need the owner, each resolvable in one or two taps, one c
 Opened by **+**. Fields: amount (numeric keypad, default sign = expense, toggle for income), category (grid of the
 8 most-used, "more…"), date (today), account (default **Cash**), note, event (pre-selected if today is inside a
 confirmed trip). Second tab: **Balance snapshot** (account + balance + date) for Revolut/PayPal/cash.
+
+- **Cash on the spot:** logging a cash expense right after a withdrawal is the normal Quick add on the Cash
+  account. The withdrawal itself only arrives with the next import; at that point the app offers, once, to link
+  the unlinked cash entries dated from the withdrawal day up to 7 days later to it (sets `linked_txn_id`; display
+  only, totals don't change either way).
 
 - **AC:** from tapping + to saved in ≤ 3 taps + typing the amount; works offline.
 

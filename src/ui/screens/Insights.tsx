@@ -1,14 +1,15 @@
 import { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { netSpent, type Line } from '../../core/aggregates';
+import { isGrossLine, netSpent, type Line } from '../../core/aggregates';
 import { addMonths, monthRange } from '../../core/dates';
 import { merchantStats, monthlySeries } from '../../core/insights';
 import type { Model } from '../../core/model';
 import { useModel } from '../../state/store';
-import { periodPresets, type Period } from '../lib/period';
+import { comparePeriod, elapsed, periodPresets, type CompareMode, type Period } from '../lib/period';
+import { CalendarHeat, CompareCard, Delta, MoneyFlow, Recurring } from './InsightsPanels';
 import { EChart, type EChartsOption } from '../charts/EChart';
 import { useColorScheme } from '../charts/useColorScheme';
-import { Card, CardTitle, Chip, Empty } from '../components/ui';
+import { Card, CardTitle, Chip, Empty, Segmented } from '../components/ui';
 import { activityHref, monthRangeFilter, openActivity } from '../lib/filter';
 import { fmtDate, fmtMonth, fmtMonthShort, fmtPct, formatEUR, formatEURShort } from '../lib/format';
 import { chartGroup, chartTheme, groupColor, GROUP_SLOT, onColor, OTHER_GROUP, tint } from '../lib/palette';
@@ -18,17 +19,41 @@ export function Insights() {
   const presets = useMemo(() => periodPresets(m), [m]);
   const [periodId, setPeriodId] = useState('6m');
   const [custom, setCustom] = useState<{ from: string; to: string } | null>(null);
-  const period: Period =
-    periodId === 'custom' && custom
-      ? { id: 'custom', label: 'Custom', ...custom }
-      : (presets.find((p) => p.id === periodId) ?? presets[3]);
-
-  const inPeriod = useMemo(
-    () => m.lines.filter((l) => l.date >= period.from && l.date <= period.to),
-    [m, period.from, period.to],
+  const period = useMemo<Period>(
+    () =>
+      periodId === 'custom' && custom
+        ? { id: 'custom', label: 'Custom', ...custom }
+        : (presets.find((p) => p.id === periodId) ?? presets[3]),
+    [periodId, custom, presets],
   );
+
+  const [gross, setGross] = useState(false);
+  const [compare, setCompare] = useState<CompareMode>('');
+  // Gross view (SPEC §4.3): spending counts only money out; refunds and paybacks are not netted.
+  const base = useMemo(
+    () => (gross ? m.lines.filter((l) => l.kind === 'income' || isGrossLine(l)) : m.lines),
+    [m, gross],
+  );
+  const inPeriod = useMemo(() => within(base, period), [base, period]);
+  const netInPeriod = useMemo(() => within(m.lines, period), [m, period]);
   const income = inPeriod.filter((l) => l.kind === 'income').reduce((s, l) => s + l.amount, 0);
   const spent = netSpent(inPeriod);
+  const saved = income - netSpent(netInPeriod);
+  const cmp = useMemo(() => comparePeriod(period, compare, m), [period, compare, m]);
+  const cmpData = useMemo(() => {
+    if (!cmp) return null;
+    const now = elapsed(period, m.today);
+    const nowLines = within(base, now);
+    const before = within(base, cmp);
+    return {
+      now,
+      nowLines,
+      before,
+      tNow: totals(nowLines, within(m.lines, now)),
+      tBefore: totals(before, within(m.lines, cmp)),
+    };
+  }, [cmp, base, period, m]);
+  const stages = m.ds.events.filter((e) => e.type === 'stage' && e.status === 'confirmed');
 
   return (
     <div className="flex flex-col gap-4">
@@ -68,11 +93,44 @@ export function Insights() {
         </div>
       )}
 
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="w-40">
+          <Segmented
+            label="Spending view"
+            value={gross ? 'gross' : 'net'}
+            onChange={(v) => setGross(v === 'gross')}
+            options={[
+              { value: 'net', label: 'Net' },
+              { value: 'gross', label: 'Gross' },
+            ]}
+          />
+        </div>
+        <select
+          className="h-11 min-w-0 flex-1 rounded-xl border border-line bg-surface px-3 text-sm"
+          value={compare}
+          onChange={(e) => setCompare(e.target.value as CompareMode)}
+          aria-label="Compare to"
+        >
+          <option value="">No comparison</option>
+          <option value="previous">Compare to previous period</option>
+          <option value="last-year">Compare to same time last year</option>
+          {stages.map((e) => (
+            <option key={e.id} value={`stage-${e.id}`}>
+              Compare to stage: {e.name}
+            </option>
+          ))}
+        </select>
+      </div>
+
       <div className="grid grid-cols-3 gap-2">
         {[
           ['Income', income, { from: period.from, to: period.to, kind: 'income' as const }],
-          ['Spent', spent, { from: period.from, to: period.to, kind: 'expense' as const }],
-          ['Saved', income - spent, { from: period.from, to: period.to, kind: 'reporting' as const }],
+          [
+            'Spent',
+            spent,
+            { from: period.from, to: period.to, kind: 'expense' as const, gross: gross || undefined },
+          ],
+          ['Saved', saved, { from: period.from, to: period.to, kind: 'reporting' as const }],
         ].map(([label, v, f]) => (
           <Link
             key={label as string}
@@ -86,21 +144,51 @@ export function Insights() {
             >
               {formatEUR(v as number, { compact: true })}
             </div>
+            {cmpData && (
+              <Delta
+                now={cmpData.tNow[label as 'Income']}
+                before={cmpData.tBefore[label as 'Income']}
+                label={cmp?.label.toLowerCase() ?? ''}
+              />
+            )}
           </Link>
         ))}
       </div>
       <p className="-mt-2 text-xs text-ink-3">
         {fmtDate(period.from)} – {fmtDate(period.to)}
-        {income > 0 ? ` · saved ${fmtPct((income - spent) / income)} of income` : ''}
+        {income > 0 ? ` · saved ${fmtPct(saved / income)} of income` : ''}
+        {gross ? ' · gross: refunds and paybacks not netted' : ''}
       </p>
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <OverTime m={m} period={period} />
-        <WhereItGoes m={m} period={period} lines={inPeriod} />
-        <Merchants m={m} period={period} lines={inPeriod} />
+        <OverTime m={m} period={period} lines={base} gross={gross} />
+        {cmp && cmpData && (
+          <CompareCard
+            period={cmpData.now}
+            cmp={cmp}
+            lines={cmpData.nowLines}
+            cmpLines={cmpData.before}
+            gross={gross}
+          />
+        )}
+        <WhereItGoes m={m} period={period} lines={inPeriod} gross={gross} />
+        <MoneyFlow m={m} period={period} lines={inPeriod} netLines={netInPeriod} gross={gross} />
+        <Merchants m={m} period={period} lines={inPeriod} gross={gross} />
+        <Recurring m={m} />
+        <CalendarHeat m={m} period={period} lines={inPeriod} gross={gross} />
       </div>
     </div>
   );
+}
+
+function within(ls: Line[], p: { from: string; to: string }): Line[] {
+  return ls.filter((l) => l.date >= p.from && l.date <= p.to);
+}
+
+/** Income, spent (in the chosen view) and saved (always net: it is real money). */
+function totals(ls: Line[], net: Line[]) {
+  const inc = ls.filter((l) => l.kind === 'income').reduce((s, l) => s + l.amount, 0);
+  return { Income: inc, Spent: netSpent(ls), Saved: inc - netSpent(net) };
 }
 
 function chartMonths(period: Period): string[] {
@@ -110,7 +198,7 @@ function chartMonths(period: Period): string[] {
   return monthRange(from, to);
 }
 
-function OverTime({ m, period }: { m: Model; period: Period }) {
+function OverTime({ m, period, lines, gross }: { m: Model; period: Period; lines: Line[]; gross: boolean }) {
   const scheme = useColorScheme();
   const navigate = useNavigate();
   const [focus, setFocus] = useState<string>('');
@@ -123,7 +211,7 @@ function OverTime({ m, period }: { m: Model; period: Period }) {
         : (l: Line) => chartGroup(l.group),
     [focus],
   );
-  const series = useMemo(() => monthlySeries(m.lines, months, groupOf), [m, months, groupOf]);
+  const series = useMemo(() => monthlySeries(lines, months, groupOf), [lines, months, groupOf]);
   const keys = useMemo(() => {
     const totals = new Map<string, number>();
     for (const s of series) for (const [k, v] of s.byGroup) totals.set(k, (totals.get(k) ?? 0) + v);
@@ -325,6 +413,7 @@ function OverTime({ m, period }: { m: Model; period: Period }) {
                 openActivity(navigate, {
                   ...monthRangeFilter(month),
                   kind: 'expense',
+                  gross: gross || undefined,
                   ...f,
                   label: `${p.seriesName} · ${fmtMonth(month)}`,
                 });
@@ -350,7 +439,17 @@ interface TreeNode {
   label?: { color: string };
 }
 
-function WhereItGoes({ m, period, lines }: { m: Model; period: Period; lines: Line[] }) {
+function WhereItGoes({
+  m,
+  period,
+  lines,
+  gross,
+}: {
+  m: Model;
+  period: Period;
+  lines: Line[];
+  gross: boolean;
+}) {
   const scheme = useColorScheme();
   const navigate = useNavigate();
   const data = useMemo<TreeNode[]>(() => {
@@ -485,6 +584,7 @@ function WhereItGoes({ m, period, lines }: { m: Model; period: Period; lines: Li
                 group,
                 cat,
                 merchant: merchant === 'Itemised cash' ? undefined : merchant,
+                gross: gross || undefined,
                 label: `${merchant} · ${period.label}`,
               });
             }}
@@ -501,6 +601,7 @@ function WhereItGoes({ m, period, lines }: { m: Model; period: Period; lines: Li
                     to: period.to,
                     kind: 'expense',
                     group: g.name,
+                    gross: gross || undefined,
                     label: `${g.name} · ${period.label}`,
                   })}
                   className="flex min-h-11 items-center gap-3 px-2 py-1.5 text-sm hover:bg-surface-2"
@@ -521,7 +622,7 @@ function WhereItGoes({ m, period, lines }: { m: Model; period: Period; lines: Li
   );
 }
 
-function Merchants({ m, period, lines }: { m: Model; period: Period; lines: Line[] }) {
+function Merchants({ m, period, lines, gross }: { m: Model; period: Period; lines: Line[]; gross: boolean }) {
   const [by, setBy] = useState<'total' | 'count'>('total');
   const stats = useMemo(() => {
     const s = merchantStats(lines, period.from, period.to).filter((x) => x.spent > 0);
@@ -556,6 +657,7 @@ function Merchants({ m, period, lines }: { m: Model; period: Period; lines: Line
                 to: period.to,
                 merchant: s.merchant,
                 kind: 'expense',
+                gross: gross || undefined,
                 label: `${s.merchant} · ${period.label}`,
               })}
               className="flex min-h-12 items-center gap-3 px-4 py-2 hover:bg-surface-2"

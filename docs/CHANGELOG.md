@@ -3,6 +3,49 @@
 All notable changes to Mealheiro. Each milestone lists what shipped and any decision taken where the spec
 was silent (CLAUDE.md "Working style").
 
+## M4: Events, budgets, goals (2026-11-25)
+
+### Shipped
+
+- **Trip proposals** (More → Events, and Needs attention on Home): open a proposal to rename it, change the
+  dates, untick members, tick pre-trip bookings, pick trip or work trip and set a budget, with a live total.
+  **Confirm** writes the event as confirmed and an `event_id` override on each ticked transaction;
+  **Dismiss** keeps the event row as dismissed, so the detector doesn't propose that range again.
+- **Event pages:** trips show spent, per day, pre-trip, FX fees and unitemized cash, a by-day chart, a
+  by-category breakdown, the budget bar and every member. Stages compare their monthly averages with the
+  same length of time before the stage, or with another stage. Tags list their transactions. Events can be
+  added, edited and deleted.
+- **Plan tab:** budgets for any month up to next month, with progress, pace marker, projected month-end and
+  a state with an icon (on track, over pace, heading over, over). Edit or stop a budget from a month on;
+  add a budget for a category, a group or everything; "Suggest budgets" fills each budgetable category from
+  its 6-month average rounded up to €5. Goals with progress, the monthly saving needed and on track /
+  behind; add, edit and delete.
+- **Insights:** net / gross toggle, compare to the previous period, the same time last year or a stage
+  (deltas on the headline numbers plus a by-group table), money flow (income → groups → saved), spending by
+  day as month calendars with trip days hatched, and recurring payments with monthly cost and next expected
+  date. Every block and day taps through to its transactions.
+- **Tests:** confirming the July proposal gives 165,85 € (unit and Playwright), dismiss, pre-trip, new event
+  ids, budgets set for next month keep this month's limit, stop a budget, goals, stage averages, and the
+  compare-to periods (month-aligned, leap day, custom, stage).
+
+### Decisions
+
+- **"Leave out confirmed trips" is per budget.** SPEC §4.4 calls it a setting; `budgets.csv` already has
+  `exclude_events`, while `settings.json` is not a file the app writes through its edit queue. The switch
+  is in each budget's sheet.
+- **Events live under More** (with a proposals badge), as SPEC §3 lists them; Home links each proposal
+  straight to its sheet.
+- **Proposals the ingest session wrote** (`events.csv` rows with `status=proposed`) tick every outflow in
+  their date range by default, since they carry no member list.
+- **Compare-to uses the part of the period that has happened:** "this month" on the 25th compares the 1st to
+  the 25th with the same days of the period it is compared to.
+- **Gross view:** spending counts only money out (refunds and paybacks are not netted), as DATA_MODEL §6 says.
+  Saved stays the real figure, and money flow shows refunds and paybacks as money in so the flow adds up.
+- **Calendar heatmap** is drawn as month grids in HTML rather than an ECharts calendar, so each day is a
+  tappable link and the layout fits a 360 px screen. It shows up to the last 12 months of the period.
+- **Recurring** marks a payment "may have stopped" when nothing came for a whole interval (at least two
+  weeks) after it was due, and leaves it out of the monthly total.
+
 ## M3: Editing and capture (2026-11-25)
 
 ### Shipped

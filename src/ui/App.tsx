@@ -6,12 +6,13 @@ import { Activity } from './screens/Activity';
 import { Connect } from './screens/Connect';
 import { Home } from './screens/Home';
 import { Review } from './screens/Review';
+import { Plan } from './screens/Plan';
+import { EventPage, Events } from './screens/Events';
 import { AccountsSettings, CategoriesSettings, RulesSettings } from './screens/Settings';
 import { ImportHistory } from './screens/ImportHistory';
 import { Insights } from './screens/Insights';
 import { Lock } from './screens/Lock';
 import { More } from './screens/More';
-import { Placeholder } from './screens/Placeholder';
 import { LoadingScreen } from './components/LoadingScreen';
 import { UpdatePrompt } from './components/UpdatePrompt';
 
@@ -72,10 +73,12 @@ function Routed() {
         <Route index element={<Home />} />
         <Route path="activity" element={<Activity />} />
         <Route path="insights" element={<Insights />} />
-        <Route path="plan" element={<Placeholder title="Plan" milestone="M4" />} />
+        <Route path="plan" element={<Plan />} />
         <Route path="more" element={<More />} />
         <Route path="more/import" element={<ImportHistory />} />
         <Route path="more/review" element={<Review />} />
+        <Route path="more/events" element={<Events />} />
+        <Route path="more/events/:id" element={<EventPage />} />
         <Route path="more/accounts" element={<AccountsSettings />} />
         <Route path="more/categories" element={<CategoriesSettings />} />
         <Route path="more/rules" element={<RulesSettings />} />

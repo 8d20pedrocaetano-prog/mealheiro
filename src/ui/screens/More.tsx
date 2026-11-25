@@ -1,4 +1,5 @@
 import {
+  CalendarRange,
   ChevronRight,
   Database,
   Inbox,
@@ -57,6 +58,7 @@ export function More() {
   const lock = useApp((s) => s.lock);
   const [confirmWipe, setConfirmWipe] = useState(false);
   const review = badgeCount(m);
+  const proposals = m.proposals.length;
   const lastImport = m.ds.imports
     .map((i) => i.imported_at.slice(0, 10))
     .sort()
@@ -72,6 +74,13 @@ export function More() {
           label="Review"
           sub={review ? `${plural(review, 'item')} need you` : 'Inbox clear'}
           badge={review}
+        />
+        <Item
+          to="/more/events"
+          icon={<CalendarRange size={20} />}
+          label="Events"
+          sub={proposals ? `${plural(proposals, 'proposed trip')} to look at` : 'Trips, stages and tags'}
+          badge={proposals}
         />
         <Item
           to="/more/import"

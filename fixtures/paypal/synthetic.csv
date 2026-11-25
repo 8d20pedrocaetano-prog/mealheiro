@@ -1,0 +1,7 @@
+"Data","Hora","Fuso horário","Nome","Tipo","Estado","Moeda","Bruto","Tarifa","Líquido","ID da transação"
+"17/01/2026","10:12:01","Europe/Lisbon","Loja Online Exemplo","Pagamento de compra expresso","Concluído","EUR","-59,88","0,00","-59,88","0TEST0000000001"
+"16/02/2026","21:40:55","Europe/Lisbon","Spotify AB","Pagamento pré-aprovado","Concluído","EUR","-43,61","0,00","-43,61","0TEST0000000002"
+"17/05/2026","08:03:10","Europe/Lisbon","Livraria Ficticia","Pagamento de compra expresso","Concluído","EUR","-40,07","0,00","-40,07","0TEST0000000003"
+"20/08/2026","15:30:00","Europe/Lisbon","Jogos Exemplo Lda","Pagamento de compra expresso","Concluído","EUR","-46,23","0,00","-46,23","0TEST0000000004"
+"21/08/2026","15:31:00","Europe/Lisbon","Reembolso Exemplo","Reembolso","Concluído","EUR","12,00","0,00","12,00","0TEST0000000005"
+"25/09/2026","12:00:00","Europe/Lisbon","Loja Americana","Pagamento de compra expresso","Concluído","USD","-15,00","0,00","-15,00","0TEST0000000006"

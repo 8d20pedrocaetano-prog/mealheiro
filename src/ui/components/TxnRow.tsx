@@ -4,6 +4,7 @@ import { CategoryIcon } from '../lib/icons';
 import { formatEUR } from '../lib/format';
 import { groupColor, tint } from '../lib/palette';
 import { effOf } from '../../core/view';
+import { itemisedSums } from '../lib/cash';
 
 /** One transaction row: merchant, category chip, amount (SPEC §4.2). */
 export function TxnRow({
@@ -22,6 +23,7 @@ export function TxnRow({
   const neutral = e.kind === 'transfer' || e.excluded;
   const color = groupColor(e.group);
   const amountClass = neutral ? 'text-ink-3 line-through' : t.amount > 0 ? 'text-good' : 'text-ink';
+  const itemised = itemisedSums(m).get(t.id);
   const catName = e.reportCategory.startsWith('unitemized-')
     ? `${cat?.name ?? e.categoryId} · unitemized`
     : (cat?.name ?? e.categoryId);
@@ -57,6 +59,11 @@ export function TxnRow({
         <span className={`num text-right text-[15px] font-medium ${amountClass}`}>
           {formatEUR(t.amount, { plus: true })}
         </span>
+        {itemised !== undefined && (
+          <span className="num text-[11px] text-ink-3">
+            {formatEUR(itemised)} of {formatEUR(-t.amount)} itemised
+          </span>
+        )}
         {contribution !== undefined && contribution !== t.amount && (
           <span className="num text-[11px] text-ink-3">
             counts {formatEUR(contribution, { plus: true })} here

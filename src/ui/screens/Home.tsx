@@ -13,9 +13,11 @@ import { EChart, type EChartsOption } from '../charts/EChart';
 import { useColorScheme } from '../charts/useColorScheme';
 import { Sheet } from '../components/Sheet';
 import { TxnDetail } from '../components/TxnDetail';
+import { badgeCount } from '../lib/review';
+import { QuickAddFab } from '../components/QuickAdd';
 import { TxnRow } from '../components/TxnRow';
 import { Card, CardTitle, Empty } from '../components/ui';
-import { activityHref, monthRangeFilter, needsReview, openActivity, type ActivityLink } from '../lib/filter';
+import { activityHref, monthRangeFilter, openActivity, type ActivityLink } from '../lib/filter';
 import { fmtDate, fmtDay, fmtMonth, fmtPct, formatEUR, formatEURShort, plural } from '../lib/format';
 import { CategoryIcon } from '../lib/icons';
 import { chartTheme, groupColor, tint } from '../lib/palette';
@@ -237,6 +239,7 @@ export function Home() {
       </div>
 
       <TxnDetail t={selected} onClose={() => setSelected(null)} />
+      <QuickAddFab />
       <AccountsSheet
         open={accountsOpen}
         onOpenChange={setAccountsOpen}
@@ -440,7 +443,7 @@ function NeedsAttention({
   month: string;
   statuses: ReturnType<typeof budgetStatuses>;
 }) {
-  const review = useMemo(() => m.ds.txns.filter((t) => needsReview(m, t)).length, [m]);
+  const review = badgeCount(m);
   const lastImport = m.ds.imports
     .map((i) => i.imported_at.slice(0, 10))
     .sort()
@@ -451,8 +454,8 @@ function NeedsAttention({
   if (review > 0)
     items.push({
       icon: <Inbox size={18} />,
-      text: `${plural(review, 'transaction')} to review`,
-      link: activityHref({ review: true, label: 'Needs review' }),
+      text: `${plural(review, 'item')} to review`,
+      link: { to: '/more/review', state: null },
     });
   for (const p of m.proposals)
     items.push({

@@ -3,7 +3,7 @@
  * and survive a concurrent push from an ingest session (ARCHITECTURE §3–4).
  */
 import 'fake-indexeddb/auto';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useApp } from '../../src/state/store';
 import { listOps } from '../../src/sync/storage';
 import { FakeGitHub } from '../helpers/fakeGitHub';
@@ -119,5 +119,35 @@ describe('sync', () => {
     expect(await useApp.getState().unlock('1234')).toBe(true);
     expect(useApp.getState().phase).toBe('ready');
     expect(useApp.getState().model!.ds.txns).toHaveLength(414);
+  });
+
+  it('keeps an offline edit across a reload (SPEC §4.2 AC)', async () => {
+    await connectAndWait();
+    const realFetch = globalThis.fetch;
+    globalThis.fetch = (() => Promise.reject(new TypeError('offline'))) as typeof fetch;
+    const t = useApp.getState().model!.ds.txns.find((x) => x.amount < 0)!;
+    await useApp.getState().commit([
+      {
+        file: 'overrides.csv',
+        kind: 'upsert',
+        key: { txn_id: t.id },
+        row: { category_id: 'gifts' },
+        label: 'recategorise transaction',
+      },
+    ]);
+    // "reload": drop all in-memory state and boot again from IndexedDB, still offline
+    useApp.getState().lock();
+    useApp.setState({ phase: 'boot', model: null, ops: [], base: new Map() });
+    vi.stubGlobal('window', { location: { search: '' } });
+    await useApp.getState().boot();
+    vi.unstubAllGlobals();
+    expect(useApp.getState().phase).toBe('locked');
+    expect(await useApp.getState().unlock('1234')).toBe(true);
+    expect(useApp.getState().ops).toHaveLength(1);
+    expect(useApp.getState().model!.view.eff.get(t.id)!.categoryId).toBe('gifts');
+    // back online: the edit reaches the repo
+    globalThis.fetch = realFetch;
+    await useApp.getState().flush();
+    expect(gh.file('overrides.csv')).toContain(`${t.id},gifts,`);
   });
 });

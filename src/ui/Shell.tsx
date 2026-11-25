@@ -1,6 +1,8 @@
 import { ChartColumn, Ellipsis, House, ListOrdered, Target } from 'lucide-react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { SyncBadge } from './components/SyncBadge';
+import { useModel } from '../state/store';
+import { badgeCount } from './lib/review';
 
 const NAV = [
   { to: '/', label: 'Home', icon: House, end: true },
@@ -11,8 +13,22 @@ const NAV = [
 ];
 
 /** Bottom tab bar on the phone, left rail on desktop (SPEC §3). */
+function Badge({ n, className = '' }: { n: number; className?: string }) {
+  if (!n) return null;
+  return (
+    <span
+      className={`num min-w-5 rounded-full bg-accent px-1.5 text-center text-[11px] leading-5 font-semibold text-accent-ink ${className}`}
+    >
+      {n > 99 ? '99+' : n}
+      <span className="sr-only"> to review</span>
+    </span>
+  );
+}
+
 export function Shell() {
   const { pathname } = useLocation();
+  const m = useModel();
+  const review = badgeCount(m);
   return (
     <div className="flex min-h-full">
       <nav
@@ -39,6 +55,7 @@ export function Shell() {
           >
             <Icon size={20} aria-hidden="true" />
             {label}
+            {to === '/more' && <Badge n={review} className="ml-auto" />}
           </NavLink>
         ))}
       </nav>
@@ -75,7 +92,10 @@ export function Shell() {
                   }`
                 }
               >
-                <Icon size={22} aria-hidden="true" />
+                <span className="relative">
+                  <Icon size={22} aria-hidden="true" />
+                  {to === '/more' && <Badge n={review} className="absolute -top-1.5 left-3.5" />}
+                </span>
                 {label}
               </NavLink>
             </li>

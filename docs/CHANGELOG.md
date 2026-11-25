@@ -3,6 +3,51 @@
 All notable changes to Mealheiro. Each milestone lists what shipped and any decision taken where the spec
 was silent (CLAUDE.md "Working style").
 
+## M3: Editing and capture (2026-11-25)
+
+### Shipped
+
+- **Detail sheet actions:** change category (then "Apply to all like this?"), all-like-this rule with a live
+  preview of how many past transactions change, note, exclude with a reason, add to / remove from an event,
+  payback for… (suggested expense first), delete a manual entry.
+- **What was this cash for?** on cash withdrawals: one line pre-filled with the full amount, pick a category,
+  save (3 taps). "Split" adds lines; the rest stays unitemized cash. Rows and the sheet show "€25 of €40
+  itemised"; tapping again edits or removes the lines.
+- **Quick add** (the + on Home and Activity): expense or income with the 8 most-used categories, date,
+  account (only accounts without imports, Cash by default), note, and the current trip pre-selected. Second
+  tab: balance snapshot.
+- **Review inbox** (More → Review, with a badge on More): uncategorised (confirm the suggestion, pick another,
+  or make a rule), who is this? (nickname + default category for unknown people), payback?, pass-through?,
+  and optional cash cards (link cash logged in the week after a withdrawal, itemise, or skip). One card at a
+  time; swipe left or "Later" to come back to it.
+- **Settings:** accounts (tracked switch with what it means, rename, balance snapshots), categories (add,
+  rename, group, kind, transfer account, icon, merge), rules (ordered list with source and hit count, move
+  up/down, edit with preview, delete, add).
+- **Tests:** every edit is checked against the demo data (cash AC: 15,50 € moves from Unitemized to
+  Restaurants with Spent unchanged; rule preview equals what saving changes; merging categories keeps totals),
+  an offline edit survives a reload and syncs later, and Playwright runs the cash, exclude, quick add and
+  review flows on phone and desktop.
+
+### Decisions
+
+- **New rules go first.** A rule made in the app gets a priority just below the current lowest, so it wins for
+  every transaction it matches (an override still wins over it). Its id is `u` + the next free number, so it
+  can't clash with an ingest session's `r` rules.
+- **Pattern suggestion:** the first word of the description (two if the first is 3 letters or fewer, like
+  `EDP COMERCIAL`); for transfers with a person (`TFI …`, `TRF MBWAY …`) the whole description.
+- **Answering a card without a "dismissed" column:** "not a payback", "not related" (pass-through) and "skip"
+  (cash) save the transaction's current category as the owner's own choice (an override). That is what keeps
+  the card from coming back, on every device, with no change to the data contract.
+- **"Who is this?" cards** are transfers that only a generic `seed` rule categorises as people-in/people-out,
+  grouped by full description and direction. Saving creates a user rule with the nickname as display name.
+- **Excluding with a reason** saves the reason as the transaction's note (overrides.csv has no reason column).
+- **Editing a manual entry's event** updates the manual row when it has one, otherwise the override.
+- **Merging categories** moves rules, overrides, manual entries and budgets, and gives an override to
+  transactions whose category only came from a suggestion (transaction files are never rewritten).
+- **The app refuses to write** any file outside DATA_MODEL §2's user-owned list, as a guard in `commit()`.
+- **Rule reordering** uses up/down buttons rather than drag (one hand, 44 px targets); it swaps priorities,
+  or renumbers in steps of 10 when two rules share one.
+
 ## M2: Read-only app on real data (2026-11-25)
 
 ### Shipped

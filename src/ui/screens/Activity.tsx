@@ -1,10 +1,11 @@
 import { Search, SlidersHorizontal, X } from 'lucide-react';
-import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useSearchParams } from 'react-router-dom';
 import type { Txn } from '../../core/dataset';
 import { useModel } from '../../state/store';
 import { Sheet } from '../components/Sheet';
 import { TxnDetail } from '../components/TxnDetail';
+import { QuickAddFab } from '../components/QuickAdd';
 import { TxnRow } from '../components/TxnRow';
 import { Chip, Empty } from '../components/ui';
 import {
@@ -26,7 +27,7 @@ interface DayGroup {
   net: number;
 }
 
-export function Activity({ actions }: { actions?: (t: Txn) => ReactNode }) {
+export function Activity() {
   const m = useModel();
   const [sp, setSp] = useSearchParams();
   const { state } = useLocation();
@@ -200,7 +201,8 @@ export function Activity({ actions }: { actions?: (t: Txn) => ReactNode }) {
       </div>
       {shown < days.length && <div ref={sentinel} className="skeleton h-12" aria-hidden="true" />}
 
-      <TxnDetail t={selected} onClose={() => setSelected(null)} actions={actions} />
+      <TxnDetail t={selected} onClose={() => setSelected(null)} />
+      <QuickAddFab />
       <FilterSheet open={filtersOpen} onOpenChange={setFiltersOpen} filter={filter} setFilter={setFilter} />
     </div>
   );

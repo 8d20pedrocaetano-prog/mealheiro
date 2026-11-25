@@ -6,7 +6,16 @@ import { groupColor, tint } from '../lib/palette';
 import { effOf } from '../../core/view';
 
 /** One transaction row: merchant, category chip, amount (SPEC §4.2). */
-export function TxnRow({ t, onOpen }: { t: Txn; onOpen?: (t: Txn) => void }) {
+export function TxnRow({
+  t,
+  onOpen,
+  contribution,
+}: {
+  t: Txn;
+  onOpen?: (t: Txn) => void;
+  /** When a filtered total counts this row differently from its amount (e.g. itemised cash offsets). */
+  contribution?: number;
+}) {
   const m = useModel();
   const e = effOf(m.view, t);
   const cat = m.ds.categories.get(e.categoryId);
@@ -44,8 +53,15 @@ export function TxnRow({ t, onOpen }: { t: Txn; onOpen?: (t: Txn) => void }) {
           {t.manual && <span className="text-ink-3">· {t.account_id}</span>}
         </span>
       </span>
-      <span className={`num shrink-0 text-right text-[15px] font-medium ${amountClass}`}>
-        {formatEUR(t.amount, { plus: true })}
+      <span className="flex shrink-0 flex-col items-end">
+        <span className={`num text-right text-[15px] font-medium ${amountClass}`}>
+          {formatEUR(t.amount, { plus: true })}
+        </span>
+        {contribution !== undefined && contribution !== t.amount && (
+          <span className="num text-[11px] text-ink-3">
+            counts {formatEUR(contribution, { plus: true })} here
+          </span>
+        )}
       </span>
     </button>
   );

@@ -32,6 +32,9 @@ function cspPlugin(): Plugin {
 
 export default defineConfig({
   base: BASE,
+  define: {
+    __APP_VERSION__: JSON.stringify(process.env.npm_package_version ?? 'dev'),
+  },
   plugins: [
     react(),
     tailwindcss(),
@@ -69,6 +72,8 @@ export default defineConfig({
   build: {
     target: 'es2022',
     sourcemap: false,
+    // ECharts (~670 KB) is its own lazily loaded chunk; the app shell stays under this.
+    chunkSizeWarningLimit: 700,
   },
   test: {
     include: ['tests/**/*.test.ts', 'tests/**/*.test.tsx'],

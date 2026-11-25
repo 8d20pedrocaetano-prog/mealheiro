@@ -3,6 +3,47 @@
 All notable changes to Mealheiro. Each milestone lists what shipped and any decision taken where the spec
 was silent (CLAUDE.md "Working style").
 
+## M2: Read-only app on real data (2026-11-25)
+
+### Shipped
+
+- **Connect and lock:** owner / repo / branch / fine-grained token with "Test connection" (refuses a public
+  repo or a token without push access). The token is stored only encrypted (AES-GCM, key from the PIN via
+  PBKDF2-SHA256, 600k iterations) and lives in memory while unlocked. 4–6 digit PIN pad, auto-lock after
+  5 minutes in the background, "Forgot PIN" wipes the device.
+- **Sync down:** Git Data API (head sha, recursive tree, changed blobs only) into IndexedDB; the app opens
+  offline from the cache, then syncs on open, on focus, when back online and every 10 minutes. Sync badge
+  shows synced / syncing / offline / "n changes waiting".
+- **Sync up (ahead of M3):** the persisted pending-ops queue, one batched commit per flush
+  (`app: <labels>` + device), and re-apply on a moved head (422/409) are in place and tested against an
+  in-memory GitHub, including an ingest push racing the ref update. No screen creates edits yet.
+- **Home:** month switcher (swipe or arrows), Spent with total budget and pace, Income, Saved, Balance,
+  Net worth, pace chart, top categories vs 3-month average, needs attention, latest transactions.
+- **Activity:** search (merchant, description, note, category or amount like `12,5`), filters (kind, group,
+  category, account, event, needs review, has note), month chips, day groups, read-only detail sheet that
+  says why a transaction has its category.
+- **Insights:** This month / Last month / Last 3, 6, 12 months / This year / custom; spending over time by
+  group (or by category within a group) with income; savings rate; where it goes (treemap plus a ranked
+  list); merchants by total or visits; a table view for the time chart.
+- **Import history:** coverage per account, gaps, last import, how to ingest a new statement.
+- **Every total taps through:** each total opens Activity with its filter, and Activity shows the filter
+  and its total.
+  Tests check that every Home KPI and period total equals the sum of the transactions it opens, for every
+  demo month.
+
+### Decisions
+
+- **Savings rate is its own small chart** under spending over time, not a second y-axis on the same chart.
+- **ECharts is lazy-loaded** (its own ~670 KB chunk, cached by the service worker), so the shell loads
+  first and charts show a skeleton for a moment.
+- **Treemap plus a ranked list:** on a 360 px screen small treemap blocks can't hold a label, so the
+  groups are also listed with share and total, each tappable.
+- **Filters:** ids, dates, kinds and category ids go in the URL, so a filtered list survives a reload.
+  Merchant, search text and the filter label go in `history.state` instead, because they can hold a
+  description or an amount (ARCHITECTURE §7). After a reload those three are dropped and the rest stays.
+- **PIN length is stored** with the connection so the lock screen unlocks as soon as enough digits are typed.
+- **Charts group colours** fold groups outside the fixed eight into "Other groups" (grey).
+
 ## M0 + M1: Foundations and core engine (2026-11-25)
 
 ### Shipped

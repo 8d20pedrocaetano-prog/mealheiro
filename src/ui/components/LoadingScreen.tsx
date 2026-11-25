@@ -2,14 +2,19 @@ import { useApp } from '../../state/store';
 
 /** Skeleton while the first sync / demo load runs: never a blank screen (SPEC §6). */
 export function LoadingScreen({ error }: { error?: string | null }) {
-  const leave = useApp((s) => s.leave);
+  const source = useApp((s) => s.source);
   if (error) {
     return (
       <div className="mx-auto flex min-h-full max-w-md flex-col justify-center gap-4 p-6">
         <h1 className="text-xl font-semibold">Couldn't load your data</h1>
         <p className="text-ink-2">{error}</p>
-        <button className="h-11 rounded-xl bg-accent px-4 font-medium text-accent-ink" onClick={leave}>
-          Back
+        <button
+          className="h-11 rounded-xl bg-accent px-4 font-medium text-accent-ink"
+          onClick={() =>
+            source?.kind === 'github' ? useApp.setState({ phase: 'locked' }) : useApp.getState().leaveDemo()
+          }
+        >
+          Try again
         </button>
       </div>
     );

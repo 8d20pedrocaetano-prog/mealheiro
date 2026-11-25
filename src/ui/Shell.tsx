@@ -1,6 +1,6 @@
 import { ChartColumn, Ellipsis, House, ListOrdered, Target } from 'lucide-react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
-import { useApp } from '../state/store';
+import { SyncBadge } from './components/SyncBadge';
 
 const NAV = [
   { to: '/', label: 'Home', icon: House, end: true },
@@ -9,19 +9,6 @@ const NAV = [
   { to: '/plan', label: 'Plan', icon: Target, end: false },
   { to: '/more', label: 'More', icon: Ellipsis, end: false },
 ];
-
-function SourceChip() {
-  const source = useApp((s) => s.source);
-  if (source?.kind !== 'demo') return null;
-  return (
-    <span
-      className="rounded-full bg-warn-soft px-2 py-0.5 text-xs font-medium text-warn"
-      title="Demo data, edits stay in memory"
-    >
-      Demo
-    </span>
-  );
-}
 
 /** Bottom tab bar on the phone, left rail on desktop (SPEC §3). */
 export function Shell() {
@@ -35,7 +22,9 @@ export function Shell() {
         <div className="mb-4 flex items-center gap-2 px-3 pt-2">
           <img src={`${import.meta.env.BASE_URL}icons/favicon.svg`} alt="" className="size-7" />
           <span className="text-lg font-semibold">Mealheiro</span>
-          <SourceChip />
+        </div>
+        <div className="mb-2 px-1">
+          <SyncBadge />
         </div>
         {NAV.map(({ to, label, icon: Icon, end }) => (
           <NavLink
@@ -58,7 +47,9 @@ export function Shell() {
         <header className="sticky top-0 z-20 flex h-12 items-center gap-2 border-b border-line bg-bg/95 px-4 backdrop-blur lg:hidden">
           <img src={`${import.meta.env.BASE_URL}icons/favicon.svg`} alt="" className="size-6" />
           <span className="font-semibold">Mealheiro</span>
-          <SourceChip />
+          <span className="ml-auto">
+            <SyncBadge />
+          </span>
         </header>
         <main
           key={pathname.split('/')[1]}

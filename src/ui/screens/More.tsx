@@ -1,7 +1,9 @@
 import {
   CalendarRange,
+  ChartColumn,
   ChevronRight,
   Database,
+  Download,
   Inbox,
   ListFilter,
   LogOut,
@@ -16,6 +18,14 @@ import { useApp, useModel } from '../../state/store';
 import { Card } from '../components/ui';
 import { fmtDate, plural } from '../lib/format';
 import { badgeCount } from '../lib/review';
+import { download } from '../lib/download';
+import { effectiveFiles, exportZip } from '../../sync/export';
+
+function exportAll() {
+  const { files, base, ops } = useApp.getState();
+  const zip = exportZip(effectiveFiles(files, base, ops), new Date());
+  download(zip.bytes, zip.name, 'application/zip');
+}
 
 function Item({
   to,
@@ -83,6 +93,12 @@ export function More() {
           badge={proposals}
         />
         <Item
+          to="/insights/year"
+          icon={<ChartColumn size={20} />}
+          label="Year in review"
+          sub="Income, spending and saving, year by year"
+        />
+        <Item
           to="/more/import"
           icon={<Upload size={20} />}
           label="Imports"
@@ -135,6 +151,13 @@ export function More() {
           </div>
         </div>
         <div className="mt-3 flex flex-wrap gap-2">
+          <button
+            className="flex h-11 items-center gap-2 rounded-xl border border-line px-3 text-sm"
+            onClick={exportAll}
+            data-testid="export-zip"
+          >
+            <Download size={16} /> Export all data
+          </button>
           {source?.kind === 'github' && (
             <>
               <button

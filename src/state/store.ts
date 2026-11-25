@@ -37,7 +37,8 @@ interface AppState {
   phase: Phase;
   source: Source | null;
   error: string | null;
-  /** Base tables as of the last sync (or the demo files). */
+  /** Base files as of the last sync (or the demo files), raw and parsed. */
+  files: FileMap;
   base: Map<string, CsvTable>;
   settings: Settings;
   ops: Op[];
@@ -45,7 +46,8 @@ interface AppState {
   sync: { state: SyncState; lastSync: string | null; error: string | null };
 
   boot: () => Promise<void>;
-  startDemo: () => Promise<void>;
+  /** `empty`: the demo's set-up files only (a fresh data repo), to see the first-run screens. */
+  startDemo: (variant?: 'full' | 'empty') => Promise<void>;
   connect: (ref: RepoRef, token: string, pin: string) => Promise<void>;
   unlock: (pin: string) => Promise<boolean>;
   lock: () => void;
@@ -91,7 +93,7 @@ export const useApp = create<AppState>((set, get) => {
   function setFiles(files: FileMap, ops = get().ops) {
     const base = parseTables(files);
     const settings = parseSettings(files['settings.json']);
-    set({ base, settings, ops, model: recompute(base, settings, ops, get().source) });
+    set({ files, base, settings, ops, model: recompute(base, settings, ops, get().source) });
   }
 
   function errMsg(e: unknown): string {
@@ -108,6 +110,7 @@ export const useApp = create<AppState>((set, get) => {
     phase: 'boot',
     source: null,
     error: null,
+    files: {},
     base: new Map(),
     settings: parseSettings(undefined),
     ops: [],
@@ -117,6 +120,7 @@ export const useApp = create<AppState>((set, get) => {
     async boot() {
       const params = new URLSearchParams(window.location.search);
       if (params.get('demo') === '1') return get().startDemo();
+      if (params.get('demo') === 'empty') return get().startDemo('empty');
       try {
         const c = await getConnection();
         if (c) {
@@ -132,12 +136,12 @@ export const useApp = create<AppState>((set, get) => {
       set({ phase: 'connect' });
     },
 
-    async startDemo() {
+    async startDemo(variant = 'full') {
       set({ source: { kind: 'demo' }, phase: 'loading', error: null, ops: [] });
       try {
-        const { demoFiles, DEMO_TODAY } = await import('../demo/files');
+        const { demoFiles, emptyDemoFiles, DEMO_TODAY } = await import('../demo/files');
         DEMO_TODAY_CACHE = DEMO_TODAY;
-        setFiles(demoFiles, []);
+        setFiles(variant === 'empty' ? emptyDemoFiles() : demoFiles, []);
         set({ phase: 'ready', sync: { state: 'idle', lastSync: null, error: null } });
       } catch (e) {
         set({ phase: 'error', error: errMsg(e) });
@@ -201,13 +205,13 @@ export const useApp = create<AppState>((set, get) => {
     },
 
     leaveDemo() {
-      set({ source: null, phase: 'connect', model: null, base: new Map(), ops: [] });
+      set({ source: null, phase: 'connect', model: null, files: {}, base: new Map(), ops: [] });
     },
 
     async forgetDevice() {
       session = null;
       await wipeDevice();
-      set({ source: null, phase: 'connect', model: null, base: new Map(), ops: [], error: null });
+      set({ source: null, phase: 'connect', model: null, files: {}, base: new Map(), ops: [], error: null });
     },
 
     async syncNow() {

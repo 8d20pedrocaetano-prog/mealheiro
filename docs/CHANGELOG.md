@@ -3,6 +3,50 @@
 All notable changes to Mealheiro. Each milestone lists what shipped and any decision taken where the spec
 was silent (CLAUDE.md "Working style").
 
+## M6: Polish (2026-11-25)
+
+### Shipped
+
+- **Year in review** (Insights → Year in review, or More): income, spent, saved and savings rate for a
+  calendar year, month by month with the best and hardest month, where it went by group, top merchants,
+  trips and the biggest one-off expenses. Every figure opens its transactions. It is built from the same
+  month summary as Home, so it reconciles with `fixtures/golden/monthly-summary.json` (tested).
+- **Exports.** More → Export all data downloads a ZIP of the data repo's files as this device sees them,
+  including edits still waiting to sync; untouched files are byte for byte the repo's. Activity has an
+  export button that saves the filtered list as CSV. Both are built on the device and saved through a Blob
+  URL, so nothing leaves the phone.
+- **A table view behind every chart:** budget pace, spending over time (now with a column per group),
+  money flow, spending by day (per month, with the busiest day) and a trip's spending per day. The
+  treemap already had its list. The toggle is a 44 px button with an accessible name.
+- **First run and empty states.** With no transactions, Home shows a welcome with the four first steps,
+  and Activity, Insights and Review say what will appear there and link to Import. Events, budgets and
+  goals explain how they fill up. Two tips (Home: "every number opens its transactions"; Activity: "tap a
+  transaction to change it") stay until dismissed. `/?demo=empty` opens the demo as a fresh data repo.
+- **Performance pass** on a synthetic 10-year, 10,002-transaction repo: the full recompute went from
+  338 ms to 62 ms after indexing payback/pass-through pair detection by day (it compared every pair of
+  transactions). Parsing takes 12 ms, the review inbox 41 ms, budgets 5 ms. Activity already renders
+  40 days at a time.
+- **Fixes:** the Activity search row no longer pushes the filter button 8 px off a 360 px screen; a wide
+  table inside a card scrolls inside the card; chart axes on empty months no longer read "1 €, 1 €, 0 €".
+- **Tests:** the ZIP writer (CRC-32 against zlib, read back through the central directory, checked with
+  Python's `zipfile` once by hand), exports with pending edits, the year review against the golden
+  summary and like-for-like comparisons, the pair index against the full scan, and Playwright for first
+  run, table views, year in review, both exports and tips.
+
+### Decisions
+
+- **Year comparisons are like for like or not at all.** A year is compared with the same months of the
+  year before, and only when every one of those months has data. Otherwise the card says there is no
+  earlier data instead of showing a misleading percentage.
+- **"Biggest one-off expenses" leaves out merchants seen in 3+ months** (rent, bills, the weekly shop);
+  otherwise the list is five rent payments.
+- **ZIP entries are stored, not compressed.** The repo is a few MB of CSV at most, and a stored ZIP needs
+  no library (no new dependency).
+- **The Activity CSV uses the data repo's number format** (`-12.34`) with a UTF-8 byte order mark so Excel
+  reads accents. A `counted` column appears when the filter counts rows differently from their amount.
+- **Dismissed tips are remembered in this browser only** (localStorage): they are a per-device
+  convenience, not data.
+
 ## M5: In-app import (2026-11-25)
 
 ### Shipped

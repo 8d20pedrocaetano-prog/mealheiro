@@ -13,6 +13,7 @@ import { ImportHistory } from './screens/ImportHistory';
 import { Insights } from './screens/Insights';
 import { Lock } from './screens/Lock';
 import { More } from './screens/More';
+import { YearReviewPage } from './screens/YearReview';
 import { LoadingScreen } from './components/LoadingScreen';
 import { UpdatePrompt } from './components/UpdatePrompt';
 
@@ -73,6 +74,8 @@ function Routed() {
         <Route index element={<Home />} />
         <Route path="activity" element={<Activity />} />
         <Route path="insights" element={<Insights />} />
+        <Route path="insights/year" element={<YearReviewPage />} />
+        <Route path="insights/year/:year" element={<YearReviewPage />} />
         <Route path="plan" element={<Plan />} />
         <Route path="more" element={<More />} />
         <Route path="more/import" element={<ImportHistory />} />

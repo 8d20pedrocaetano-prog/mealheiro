@@ -1,4 +1,4 @@
-import { Search, SlidersHorizontal, X } from 'lucide-react';
+import { Download, Search, SlidersHorizontal, X } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useSearchParams } from 'react-router-dom';
 import type { Txn } from '../../core/dataset';
@@ -7,7 +7,8 @@ import { Sheet } from '../components/Sheet';
 import { TxnDetail } from '../components/TxnDetail';
 import { QuickAddFab } from '../components/QuickAdd';
 import { TxnRow } from '../components/TxnRow';
-import { Chip, Empty } from '../components/ui';
+import { Hint, NoDataYet } from '../components/Onboarding';
+import { Chip } from '../components/ui';
 import {
   applyFilter,
   filterSearch,
@@ -17,6 +18,8 @@ import {
   parseFilter,
   type TxnFilter,
 } from '../lib/filter';
+import { download } from '../lib/download';
+import { activityCsv } from '../lib/exportCsv';
 import { fmtDate, fmtDayHeader, fmtMonth, fmtMonthShort, formatEUR, plural } from '../lib/format';
 
 const PAGE = 40;
@@ -99,16 +102,30 @@ export function Activity() {
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex items-baseline justify-between gap-2">
+      <div className="flex items-center gap-2">
         <h1 className="text-xl font-semibold">Activity</h1>
-        <span className="text-sm text-ink-2" data-testid="txn-count">
+        <span className="ml-auto text-sm text-ink-2" data-testid="txn-count">
           {plural(result.txns.length, 'transaction')}
         </span>
+        {result.txns.length > 0 && (
+          <button
+            type="button"
+            className="-my-2 -mr-2 flex size-11 items-center justify-center rounded-xl text-ink-2 hover:bg-surface-2"
+            aria-label="Export these transactions as CSV"
+            title="Export as CSV"
+            data-testid="export-csv"
+            onClick={() =>
+              download(activityCsv(m, result), `mealheiro-activity-${m.today}.csv`, 'text/csv;charset=utf-8')
+            }
+          >
+            <Download size={18} />
+          </button>
+        )}
       </div>
 
       <div className="sticky top-12 z-10 -mx-4 flex flex-col gap-2 bg-bg/95 px-4 pt-1 pb-2 backdrop-blur lg:top-0">
         <div className="flex gap-2">
-          <label className="flex h-11 flex-1 items-center gap-2 rounded-xl border border-line bg-surface px-3 focus-within:border-accent">
+          <label className="flex h-11 min-w-0 flex-1 items-center gap-2 rounded-xl border border-line bg-surface px-3 focus-within:border-accent">
             <Search size={18} className="text-ink-3" aria-hidden="true" />
             <input
               type="search"
@@ -178,7 +195,30 @@ export function Activity() {
         </div>
       )}
 
-      {days.length === 0 && <Empty>No transactions match.</Empty>}
+      {m.ds.txns.length === 0 ? (
+        <NoDataYet what="No transactions yet. Import a statement, or tap + to log cash you spent." />
+      ) : (
+        days.length === 0 && (
+          <div className="flex flex-col items-center gap-2 py-6 text-sm text-ink-3">
+            No transactions match.
+            <button
+              type="button"
+              className="min-h-11 rounded-xl border border-line px-4 text-ink"
+              onClick={() => {
+                setQuery('');
+                setFilter({});
+              }}
+            >
+              Clear filters
+            </button>
+          </div>
+        )
+      )}
+      {m.ds.txns.length > 0 && (
+        <Hint id="activity-tap">
+          Tap a transaction to change its category, add a note, split it or put it on a trip.
+        </Hint>
+      )}
       <div className="flex flex-col gap-3">
         {days.slice(0, shown).map((g) => (
           <section key={g.day} className="overflow-hidden rounded-2xl border border-line bg-surface">

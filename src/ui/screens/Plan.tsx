@@ -93,7 +93,12 @@ export function Plan() {
           Budgets
         </CardTitle>
         {statuses.length === 0 && (
-          <Empty>No budgets for {fmtMonth(month)}. Tap Suggest to start from your averages.</Empty>
+          <Empty>
+            No budgets for {fmtMonth(month)}.{' '}
+            {m.months.length >= 2
+              ? 'Tap Suggest to start from your averages, or Add to set a limit.'
+              : 'Tap Add to set a monthly limit. After a couple of months, Suggest proposes limits from your averages.'}
+          </Empty>
         )}
         <ul className="divide-y divide-line pb-1" data-testid="budget-list">
           {statuses.map((s) => {
@@ -148,7 +153,11 @@ export function Plan() {
         >
           Goals
         </CardTitle>
-        {goals.length === 0 && <Empty>No goals yet.</Empty>}
+        {goals.length === 0 && (
+          <Empty>
+            No goals yet. Add one to save towards an amount by a date, like an emergency fund or a deposit.
+          </Empty>
+        )}
         <ul className="divide-y divide-line pb-1">
           {goals.map((g) => (
             <li key={g.goal.id}>

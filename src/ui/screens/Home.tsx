@@ -14,6 +14,8 @@ import { useColorScheme } from '../charts/useColorScheme';
 import { Sheet } from '../components/Sheet';
 import { TxnDetail } from '../components/TxnDetail';
 import { BudgetBar } from '../components/BudgetBar';
+import { DataTable, ViewToggle } from '../components/DataTable';
+import { Hint, Welcome } from '../components/Onboarding';
 import { badgeCount } from '../lib/review';
 import { QuickAddFab } from '../components/QuickAdd';
 import { TxnRow } from '../components/TxnRow';
@@ -93,6 +95,14 @@ export function Home() {
     setMonth(next);
   };
 
+  if (!m.ds.txns.length)
+    return (
+      <>
+        <Welcome />
+        <QuickAddFab />
+      </>
+    );
+
   let paceText: ReactNode = null;
   if (total) {
     const label =
@@ -148,6 +158,10 @@ export function Home() {
           <ChevronRight size={22} />
         </button>
       </div>
+
+      <Hint id="home-tap">
+        Every number opens the transactions behind it. Swipe sideways to change month.
+      </Hint>
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-6">
         <Link
@@ -252,8 +266,8 @@ export function Home() {
 
 function PaceCard({ m, month }: { m: Model; month: string }) {
   const scheme = useColorScheme();
-  const option = useMemo<EChartsOption>(() => {
-    const th = chartTheme(scheme === 'dark');
+  const [table, setTable] = useState(false);
+  const d = useMemo(() => {
     const statuses = budgetStatuses(m.view, m.lines, month, m.today);
     const total = statuses.find((s) => s.row.scope === 'total');
     const dim = daysInMonth(month);
@@ -272,12 +286,18 @@ function PaceCard({ m, month }: { m: Model; month: string }) {
       paceName = '3-month average pace';
     }
     const days = Array.from({ length: dim }, (_, i) => i + 1);
-    const actual = cum.map((v, i) => (i < day ? v / 100 : null));
-    const pace = days.map((d) => Math.round((limit * d) / dim) / 100);
+    // cents
+    const actual = cum.map((v, i) => (i < day ? v : null));
+    const pace = days.map((x) => Math.round((limit * x) / dim));
     const projected =
       isCurrent && day < dim
-        ? days.map((d) => (d < day ? null : Math.round(((cum[day - 1] ?? 0) / day) * d) / 100))
+        ? days.map((x) => (x < day ? null : Math.round(((cum[day - 1] ?? 0) / day) * x)))
         : [];
+    return { days, actual, pace, projected, paceName };
+  }, [m, month]);
+  const option = useMemo<EChartsOption>(() => {
+    const th = chartTheme(scheme === 'dark');
+    const eur = (v: number | null) => (v === null ? null : v / 100);
     return {
       animation: false,
       grid: { left: 8, right: 12, top: 28, bottom: 4, containLabel: true },
@@ -288,13 +308,14 @@ function PaceCard({ m, month }: { m: Model; month: string }) {
       },
       xAxis: {
         type: 'category',
-        data: days,
+        data: d.days,
         axisLine: { lineStyle: { color: th.grid } },
         axisTick: { show: false },
         axisLabel: { color: th.ink3, interval: 6 },
       },
       yAxis: {
         type: 'value',
+        minInterval: 1,
         splitLine: { lineStyle: { color: th.grid } },
         axisLabel: { color: th.ink3, formatter: (v: number) => formatEURShort(v * 100) },
       },
@@ -302,26 +323,26 @@ function PaceCard({ m, month }: { m: Model; month: string }) {
         {
           name: 'Spent',
           type: 'line',
-          data: actual,
+          data: d.actual.map(eur),
           showSymbol: false,
           lineStyle: { width: 2, color: th.accent },
           itemStyle: { color: th.accent },
           z: 3,
         },
         {
-          name: paceName,
+          name: d.paceName,
           type: 'line',
-          data: pace,
+          data: d.pace.map(eur),
           showSymbol: false,
           lineStyle: { width: 1.5, color: th.ink3 },
           itemStyle: { color: th.ink3 },
         },
-        ...(projected.length
+        ...(d.projected.length
           ? [
               {
                 name: 'Projection',
                 type: 'line',
-                data: projected,
+                data: d.projected.map(eur),
                 showSymbol: false,
                 lineStyle: { width: 2, type: 'dashed', color: th.accent },
                 itemStyle: { color: th.accent },
@@ -330,17 +351,41 @@ function PaceCard({ m, month }: { m: Model; month: string }) {
           : []),
       ],
     };
-  }, [m, month, scheme]);
+  }, [d, scheme]);
+  const money = (v: number | null | undefined) => (v === null || v === undefined ? '—' : formatEUR(v));
   return (
     <Card>
-      <CardTitle>Budget pace</CardTitle>
-      <div className="px-2 pb-2">
-        <EChart
-          option={option}
-          height={200}
-          ariaLabel="Cumulative spending this month against a straight-line budget pace"
+      <CardTitle action={<ViewToggle table={table} onChange={setTable} what="budget pace" />}>
+        Budget pace
+      </CardTitle>
+      {d.pace.every((v) => v === 0) && d.actual.every((v) => !v) ? (
+        <Empty>No spending in {fmtMonth(month)} yet.</Empty>
+      ) : table ? (
+        <DataTable
+          caption={`Cumulative spending by day of ${fmtMonth(month)}`}
+          testId="pace-table"
+          columns={[
+            { label: 'Day' },
+            { label: 'Spent so far', num: true },
+            { label: d.paceName, num: true },
+            ...(d.projected.length ? [{ label: 'Projection', num: true }] : []),
+          ]}
+          rows={d.days.map((x, i) => [
+            fmtDay(`${month}-${String(x).padStart(2, '0')}`),
+            money(d.actual[i]),
+            money(d.pace[i]),
+            ...(d.projected.length ? [money(d.projected[i])] : []),
+          ])}
         />
-      </div>
+      ) : (
+        <div className="px-2 pb-2">
+          <EChart
+            option={option}
+            height={200}
+            ariaLabel="Cumulative spending this month against a straight-line budget pace"
+          />
+        </div>
+      )}
     </Card>
   );
 }

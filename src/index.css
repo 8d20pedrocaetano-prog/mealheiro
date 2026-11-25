@@ -1,0 +1,113 @@
+@import 'tailwindcss';
+
+/*
+ * Visual direction (SPEC §6): calm, numeric, legible. Neutral background, one accent colour,
+ * semantic colours only for state. Light and dark follow the system.
+ */
+:root {
+  --bg: #f6f6f3;
+  --surface: #ffffff;
+  --surface-2: #efefeb;
+  --line: #e2e2dc;
+  --ink: #1b1d1c;
+  --ink-2: #555a57;
+  --ink-3: #828884;
+  --accent: #0f766e;
+  --accent-ink: #ffffff;
+  --accent-soft: #d8efeb;
+  --good: #15803d;
+  --warn: #b45309;
+  --warn-soft: #fdf0dc;
+  --bad: #b91c1c;
+  --bad-soft: #fbe3e1;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #101312;
+    --surface: #181c1b;
+    --surface-2: #212625;
+    --line: #2c3331;
+    --ink: #eceeed;
+    --ink-2: #aab1ae;
+    --ink-3: #7c8481;
+    --accent: #2dd4bf;
+    --accent-ink: #04201d;
+    --accent-soft: #123a35;
+    --good: #4ade80;
+    --warn: #fbbf24;
+    --warn-soft: #3a2c0e;
+    --bad: #f87171;
+    --bad-soft: #3d1717;
+    color-scheme: dark;
+  }
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-line: var(--line);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-accent: var(--accent);
+  --color-accent-ink: var(--accent-ink);
+  --color-accent-soft: var(--accent-soft);
+  --color-good: var(--good);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
+  --color-bad: var(--bad);
+  --color-bad-soft: var(--bad-soft);
+  --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: contain;
+}
+
+.num {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum';
+}
+
+/* Skeleton loader: never a blank screen (SPEC §6). */
+.skeleton {
+  background: var(--surface-2);
+  border-radius: 0.5rem;
+  animation: pulse-soft 1.4s ease-in-out infinite;
+}
+
+@keyframes pulse-soft {
+  50% {
+    opacity: 0.55;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: none;
+  }
+}
+
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}

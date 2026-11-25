@@ -32,8 +32,9 @@ Build in order. Each milestone ends deployable, with its checks green.
 ## M3: Editing and capture
 
 - Pending-ops queue, batched commits, conflict retry (ARCHITECTURE §4).
-- Detail sheet actions: recategorise, "apply to all like this" (rule with preview), note, exclude, payback link.
-- Review inbox (all card types except events), Quick add (expense/income + balance snapshot).
+- Detail sheet actions: recategorise, "apply to all like this" (rule with preview), note, exclude, payback link,
+  "What was this cash for?" on cash withdrawals.
+- Review inbox (all card types except events), Quick add (expense/income + balance snapshot, cash linking).
 - Settings: accounts (tracked toggle), categories, rules (order, test, hit count).
 - **Done when:** the owner clears the first-import review inbox on the phone, offline edits sync later, and a
   concurrent push from an ingest session doesn't lose anything.

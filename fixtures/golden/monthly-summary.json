@@ -1,0 +1,122 @@
+{
+ "2026-01": {
+  "spend:Home": "-702.17",
+  "spend:Food": "-697.70",
+  "spend:People": "18.87",
+  "spend:Bills & subscriptions": "-80.11",
+  "spend:Transport": "-100.37",
+  "spend:Health & fitness": "-34.90",
+  "spend:Shopping": "-59.88",
+  "spend:Fees": "-0.46",
+  "income": "1890.00"
+ },
+ "2026-02": {
+  "spend:Home": "-689.13",
+  "spend:Food": "-535.53",
+  "spend:Transport": "-105.10",
+  "spend:Bills & subscriptions": "-80.11",
+  "spend:Health & fitness": "-34.90",
+  "spend:People": "2.91",
+  "spend:Unitemized": "-40.00",
+  "spend:Shopping": "-43.61",
+  "spend:Fees": "-0.46",
+  "spend:Travel": "-142.36",
+  "income": "1890.00"
+ },
+ "2026-03": {
+  "spend:Home": "-689.70",
+  "spend:Travel": "-268.00",
+  "spend:Food": "-602.82",
+  "spend:Bills & subscriptions": "-80.11",
+  "spend:Transport": "-76.52",
+  "spend:Health & fitness": "-34.90",
+  "spend:People": "31.26",
+  "spend:Fees": "-0.46",
+  "spend:Unitemized": "-150.00",
+  "income": "1890.00"
+ },
+ "2026-04": {
+  "spend:Home": "-694.26",
+  "spend:Food": "-546.88",
+  "spend:People": "84.97",
+  "spend:Bills & subscriptions": "-80.11",
+  "spend:Transport": "-90.39",
+  "spend:Health & fitness": "-34.90",
+  "spend:Unitemized": "-100.00",
+  "spend:Other": "-173.50",
+  "spend:Fees": "-4.51",
+  "income": "1890.00"
+ },
+ "2026-05": {
+  "spend:Home": "-693.99",
+  "spend:Food": "-644.11",
+  "spend:Transport": "-115.15",
+  "spend:Bills & subscriptions": "-80.11",
+  "spend:Health & fitness": "-34.90",
+  "spend:Shopping": "-52.07",
+  "spend:Unitemized": "-48.00",
+  "spend:People": "11.49",
+  "spend:Travel": "-96.80",
+  "spend:Fees": "-0.46",
+  "income": "1890.00"
+ },
+ "2026-06": {
+  "spend:Home": "-709.67",
+  "spend:Food": "-757.90",
+  "spend:Bills & subscriptions": "-80.11",
+  "spend:Transport": "-99.84",
+  "spend:Health & fitness": "-34.90",
+  "spend:People": "-45.00",
+  "spend:Unitemized": "-80.00",
+  "spend:Leisure": "0.00",
+  "spend:Fees": "-0.46",
+  "income": "1890.00"
+ },
+ "2026-07": {
+  "spend:Home": "-700.96",
+  "spend:Food": "-653.53",
+  "spend:Other": "-111.65",
+  "spend:Leisure": "-54.20",
+  "spend:Bills & subscriptions": "-80.11",
+  "spend:Health & fitness": "-34.90",
+  "spend:People": "27.34",
+  "spend:Transport": "-48.35",
+  "spend:Fees": "-0.46",
+  "income": "2835.00"
+ },
+ "2026-08": {
+  "spend:Home": "-705.24",
+  "spend:Food": "-698.47",
+  "spend:Transport": "-85.43",
+  "spend:Bills & subscriptions": "-80.11",
+  "spend:People": "49.37",
+  "spend:Health & fitness": "-34.90",
+  "income": "2302.50",
+  "spend:Unitemized": "-80.00",
+  "spend:Shopping": "-46.23",
+  "spend:Fees": "-0.46"
+ },
+ "2026-09": {
+  "spend:Home": "-694.64",
+  "spend:Food": "-644.98",
+  "spend:Bills & subscriptions": "-80.11",
+  "spend:Transport": "-130.05",
+  "spend:Health & fitness": "-34.90",
+  "spend:People": "-10.00",
+  "spend:Unitemized": "-44.50",
+  "spend:Shopping": "-24.14",
+  "spend:Fees": "-0.46",
+  "income": "1890.00"
+ },
+ "2026-10": {
+  "spend:Home": "-706.91",
+  "spend:Food": "-872.45",
+  "spend:People": "95.61",
+  "spend:Bills & subscriptions": "-80.11",
+  "spend:Transport": "-95.72",
+  "spend:Health & fitness": "-34.90",
+  "spend:Unitemized": "-40.00",
+  "spend:Fees": "-0.46",
+  "income": "1890.00"
+ }
+}

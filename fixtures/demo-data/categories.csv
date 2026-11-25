@@ -1,0 +1,45 @@
+id,name,group,kind,counterparty_account,budgetable,icon
+salary,Salary,Income,income,,false,briefcase
+tax-refund,Tax refund,Income,income,,false,receipt
+work-reimbursement,Work expense reimbursement,Income,income,,false,building
+family-support,Family support,Income,income,,false,heart
+other-income,Other income,Income,income,,false,plus-circle
+groceries,Groceries,Food,expense,,true,shopping-cart
+restaurants,Restaurants,Food,expense,,true,utensils
+cafes-snacks,Cafés & snacks,Food,expense,,true,coffee
+delivery,Food delivery,Food,expense,,true,bike
+work-canteen,Work canteen,Food,expense,,true,building
+fuel,Fuel,Transport,expense,,true,fuel
+tolls,Tolls,Transport,expense,,true,road
+parking,Parking,Transport,expense,,true,square-parking
+public-transport,Public transport,Transport,expense,,true,train
+ride-hailing,Taxi & ride-hailing,Transport,expense,,true,car-taxi
+car-maintenance,Car maintenance,Transport,expense,,true,wrench
+flights,Flights,Travel,expense,,true,plane
+accommodation,Accommodation,Travel,expense,,true,bed
+travel-other,Travel (other),Travel,expense,,true,map
+rent,Rent,Home,expense,,true,home
+utilities,Utilities,Home,expense,,true,plug
+home-supplies,Home & household,Home,expense,,true,sofa
+phone,Phone,Bills & subscriptions,expense,,true,smartphone
+software-ai,Software & AI tools,Bills & subscriptions,expense,,true,cpu
+streaming,Streaming & media,Bills & subscriptions,expense,,true,tv
+gym,Gym,Health & fitness,expense,,true,dumbbell
+health,Health & optics,Health & fitness,expense,,true,stethoscope
+hair-beauty,Hair & beauty,Personal care,expense,,true,scissors
+clothing,Clothing & shoes,Shopping,expense,,true,shirt
+sports-gear,Sports gear,Shopping,expense,,true,trophy
+gifts,Gifts,Shopping,expense,,true,gift
+online-shopping,Online shopping,Shopping,expense,,true,package
+general-shopping,General shopping,Shopping,expense,,true,shopping-bag
+entertainment,Entertainment & events,Leisure,expense,,true,ticket
+bars-nightlife,Bars & nightlife,Leisure,expense,,true,beer
+people-out,Paid to people (MB Way),People,expense,,true,send
+people-in,Received from people,People,expense,,false,inbox
+post-admin,Post & admin,Other,expense,,true,mail
+bank-fees,Bank fees,Fees,expense,,true,landmark
+cash-withdrawal,Cash withdrawal,Transfers,transfer,cash,false,banknote
+transfer-revolut,Transfer to/from Revolut,Transfers,transfer,revolut,false,arrow-left-right
+transfer-paypal,Transfer to/from PayPal,Transfers,transfer,paypal,false,arrow-left-right
+savings-transfer,Transfer to savings,Transfers,transfer,savings,false,piggy-bank
+uncategorized,Uncategorized,Other,expense,,false,help-circle

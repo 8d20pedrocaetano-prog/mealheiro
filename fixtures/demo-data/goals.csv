@@ -1,0 +1,3 @@
+id,name,target_amount,target_date,basis,start_date,start_amount,priority,notes
+g-emergency,Emergency fund,6000,2027-06-30,net-worth,2026-01-01,2430.25,1,
+g-japan,Japan trip,2500,2027-04-01,savings-since-start,2026-06-01,0,2,Saved = income - spending since start_date

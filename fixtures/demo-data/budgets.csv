@@ -1,0 +1,7 @@
+id,scope,target,monthly_limit,start_month,end_month,exclude_events,notes
+b01,category,groceries,260,2026-01,,false,
+b02,category,restaurants,180,2026-01,,false,
+b03,category,cafes-snacks,40,2026-01,,false,
+b04,group,Transport,140,2026-01,,false,
+b05,category,unitemized-cash,80,2026-01,,false,
+b06,total,all,1500,2026-01,,true,trips have their own budgets

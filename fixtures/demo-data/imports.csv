@@ -1,0 +1,2 @@
+id,imported_at,account_id,source_type,file_name,file_sha256,period_start,period_end,rows_in_file,rows_added,rows_duplicate,closing_balance,checks,by
+imp-20261115-201004,2026-11-15T20:10:04,cgd-main,cgd-pdf,synthetic-statement.pdf,5da821979845d593260c73d34a9ddbd3957d1fc694c4d57c22f0d9aab5b32789,2026-01-01,2026-10-31,412,412,0,5552.92,ok,demo

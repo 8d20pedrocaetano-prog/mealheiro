@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "home_currency": "EUR",
+  "locale": "pt-PT",
+  "ui_language": "en",
+  "week_starts_on": "monday",
+  "home_area": [
+    "LISBOA",
+    "AREEIRO",
+    "ALVALADE",
+    "BENFICA",
+    "COLOMBO",
+    "ROSSIO"
+  ],
+  "trip_detection": {
+    "away_day_score": 3,
+    "max_gap_days": 2,
+    "min_trip_score": 6,
+    "pre_trip_window_days": 120
+  },
+  "budgets": {
+    "exclude_confirmed_trips": false
+  }
+}

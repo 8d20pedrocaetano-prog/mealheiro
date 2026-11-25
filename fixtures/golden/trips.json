@@ -1,0 +1,89 @@
+[
+ {
+  "start": "2026-04-10",
+  "end": "2026-04-14",
+  "days": 5,
+  "score": 33,
+  "total": "298.50",
+  "members": [
+   "231ed7fb303bec47",
+   "5c33fdf2b3e77f26",
+   "7cde0b713d463f18",
+   "27fdfaff522724a7",
+   "f8bd11ea0d3e1eb3",
+   "41d1277687d846bd",
+   "a6bacaed01d4ce72",
+   "66f3e250466caad6",
+   "95cbdc874aab6d57",
+   "63158070a709888e",
+   "6678f7028743fb19",
+   "dc08631f9aaf3dff",
+   "3f6c989c21d870ce",
+   "5aa9a92449b7882a",
+   "bfd6f5f3cc84e70a",
+   "450d0e7c58241c3f",
+   "3985c232f156c42c",
+   "e11af94d5337ff90",
+   "bf84f9f0d7753743",
+   "12a400524caa37d5",
+   "a6b3df1b5ef62d5c",
+   "e9660e0ab293f40e",
+   "31bee48f36274f9e",
+   "b23e1cc1b8043a33",
+   "bed1bb365bbb08e4",
+   "27ba820cd258cac2"
+  ],
+  "unticked": [
+   "5aa9a92449b7882a"
+  ],
+  "pre_trip_suggestions": [
+   "a6feebb32fb38e99",
+   "5d3ecd8d1e8db224"
+  ],
+  "sample": [
+   "ARTHURS",
+   "CASTLE",
+   "COMISSAO COMPRAS FORA",
+   "EDINBUR",
+   "LOTHIAN",
+   "MAKARS",
+   "NATIONA",
+   "OINK ED"
+  ]
+ },
+ {
+  "start": "2026-07-03",
+  "end": "2026-07-06",
+  "days": 4,
+  "score": 16,
+  "total": "165.85",
+  "members": [
+   "d0e0c25546354db9",
+   "c061ce2c13ef20b7",
+   "9d9216032143ec5a",
+   "9c3a5ff991cf4ea2",
+   "f5e17320d7510793",
+   "34e5779404e67246",
+   "f4265f6c2e3ca12a",
+   "eaf258d05a627800",
+   "476417c257220c64",
+   "48b256bf4d8bee10"
+  ],
+  "unticked": [
+   "d0e0c25546354db9",
+   "f4265f6c2e3ca12a"
+  ],
+  "pre_trip_suggestions": [
+   "7af8497e1c4ef9ba"
+  ],
+  "sample": [
+   "AEROPOR",
+   "BAR CAN",
+   "BOQUERI",
+   "CERVESE",
+   "MERCADO",
+   "SAGRADA",
+   "TMB MET"
+  ]
+ }
+]

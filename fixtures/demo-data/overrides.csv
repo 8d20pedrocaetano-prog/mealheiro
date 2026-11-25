@@ -1,0 +1,30 @@
+txn_id,category_id,event_id,note,excluded,reimburses_txn_id,updated_at
+231ed7fb303bec47,,ev-edinburgh,,,,2026-04-20T10:00:00
+5c33fdf2b3e77f26,,ev-edinburgh,,,,2026-04-20T10:00:00
+7cde0b713d463f18,,ev-edinburgh,,,,2026-04-20T10:00:00
+27fdfaff522724a7,,ev-edinburgh,,,,2026-04-20T10:00:00
+f8bd11ea0d3e1eb3,,ev-edinburgh,,,,2026-04-20T10:00:00
+41d1277687d846bd,,ev-edinburgh,,,,2026-04-20T10:00:00
+a6bacaed01d4ce72,,ev-edinburgh,,,,2026-04-20T10:00:00
+66f3e250466caad6,,ev-edinburgh,,,,2026-04-20T10:00:00
+95cbdc874aab6d57,,ev-edinburgh,,,,2026-04-20T10:00:00
+63158070a709888e,,ev-edinburgh,,,,2026-04-20T10:00:00
+6678f7028743fb19,,ev-edinburgh,,,,2026-04-20T10:00:00
+dc08631f9aaf3dff,,ev-edinburgh,,,,2026-04-20T10:00:00
+3f6c989c21d870ce,,ev-edinburgh,,,,2026-04-20T10:00:00
+bfd6f5f3cc84e70a,,ev-edinburgh,,,,2026-04-20T10:00:00
+450d0e7c58241c3f,,ev-edinburgh,,,,2026-04-20T10:00:00
+3985c232f156c42c,,ev-edinburgh,,,,2026-04-20T10:00:00
+e11af94d5337ff90,,ev-edinburgh,,,,2026-04-20T10:00:00
+bf84f9f0d7753743,,ev-edinburgh,,,,2026-04-20T10:00:00
+12a400524caa37d5,,ev-edinburgh,,,,2026-04-20T10:00:00
+a6b3df1b5ef62d5c,,ev-edinburgh,,,,2026-04-20T10:00:00
+e9660e0ab293f40e,,ev-edinburgh,,,,2026-04-20T10:00:00
+31bee48f36274f9e,,ev-edinburgh,,,,2026-04-20T10:00:00
+b23e1cc1b8043a33,,ev-edinburgh,,,,2026-04-20T10:00:00
+bed1bb365bbb08e4,,ev-edinburgh,,,,2026-04-20T10:00:00
+27ba820cd258cac2,,ev-edinburgh,,,,2026-04-20T10:00:00
+a6feebb32fb38e99,,ev-edinburgh,,,,2026-04-20T10:00:00
+5d3ecd8d1e8db224,,ev-edinburgh,,,,2026-04-20T10:00:00
+36ee6f8277e408f5,entertainment,,concert tickets for Rui and me,,,2026-06-19T09:00:00
+4d4557127e37dd7b,entertainment,,Rui's ticket,,36ee6f8277e408f5,2026-06-19T09:00:00

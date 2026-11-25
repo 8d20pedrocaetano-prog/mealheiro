@@ -1,0 +1,5 @@
+id,name,type,status,start_date,end_date,budget,color,source,notes,created_at
+ev-edinburgh,Edinburgh,trip,confirmed,2026-04-10,2026-04-14,600,#2563eb,detector,Confirmed from detector proposal,2026-04-20
+ev-2026-07-03,Trip 2026-07-03,trip,proposed,2026-07-03,2026-07-06,,,detector,,2026-07-10
+ev-porto,Porto weekend,trip,confirmed,2026-09-11,2026-09-13,250,#db2777,user,Domestic: added by hand,2026-09-14
+ev-new-job,New job,stage,confirmed,2026-06-01,,,#16a34a,user,Compare spending before/after,2026-06-01

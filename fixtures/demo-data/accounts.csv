@@ -1,0 +1,6 @@
+id,name,institution,type,currency,tracked,opening_date,notes
+cgd-main,CGD current account,Caixa Geral de Depósitos,current,EUR,true,2026-01-01,Synthetic demo account
+revolut,Revolut,Revolut,current,EUR,false,,Not imported yet: top-ups from CGD count as unitemized spending until Revolut statements are imported
+paypal,PayPal,PayPal,wallet,EUR,false,,PayPal purchases appear on CGD as 'PayPal Europe S a r l'
+cash,Cash wallet,,cash,EUR,false,,ATM withdrawals count as unitemized spending while untracked
+savings,Savings,,savings,EUR,false,,Placeholder for a savings account or vault

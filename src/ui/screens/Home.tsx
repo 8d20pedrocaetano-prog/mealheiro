@@ -13,6 +13,7 @@ import { EChart, type EChartsOption } from '../charts/EChart';
 import { useColorScheme } from '../charts/useColorScheme';
 import { Sheet } from '../components/Sheet';
 import { TxnDetail } from '../components/TxnDetail';
+import { BudgetBar } from '../components/BudgetBar';
 import { badgeCount } from '../lib/review';
 import { QuickAddFab } from '../components/QuickAdd';
 import { TxnRow } from '../components/TxnRow';
@@ -249,33 +250,6 @@ export function Home() {
   );
 }
 
-function BudgetBar({ spent, limit, pace }: { spent: number; limit: number; pace: number | null }) {
-  const pct = limit > 0 ? Math.min(1, spent / limit) : 0;
-  const over = spent > limit;
-  const overPace = pace !== null && spent > pace;
-  return (
-    <div
-      className="relative h-2 rounded-full bg-surface-2"
-      role="meter"
-      aria-valuemin={0}
-      aria-valuemax={limit}
-      aria-valuenow={spent}
-    >
-      <div
-        className={`h-2 rounded-full ${over ? 'bg-bad' : overPace ? 'bg-warn' : 'bg-accent'}`}
-        style={{ width: `${pct * 100}%` }}
-      />
-      {pace !== null && limit > 0 && (
-        <div
-          className="absolute -top-1 h-4 w-0.5 rounded bg-ink-2"
-          style={{ left: `${Math.min(1, pace / limit) * 100}%` }}
-          title="Where spending would be on a straight line"
-        />
-      )}
-    </div>
-  );
-}
-
 function PaceCard({ m, month }: { m: Model; month: string }) {
   const scheme = useColorScheme();
   const option = useMemo<EChartsOption>(() => {
@@ -450,7 +424,7 @@ function NeedsAttention({
     .pop();
   const staleDays = lastImport ? daysSince(lastImport, m.today) : null;
   const hot = statuses.filter((s) => s.row.scope !== 'total' && s.limit > 0 && s.spent >= 0.9 * s.limit);
-  const items: { icon: ReactNode; text: ReactNode; link: ActivityLink }[] = [];
+  const items: { icon: ReactNode; text: ReactNode; link: { to: string; state: unknown } }[] = [];
   if (review > 0)
     items.push({
       icon: <Inbox size={18} />,
@@ -461,7 +435,7 @@ function NeedsAttention({
     items.push({
       icon: <Plane size={18} />,
       text: `Proposed trip: ${p.name} (${fmtDay(p.start)}–${fmtDay(p.end)})`,
-      link: activityHref({ from: p.start, to: p.end, kind: 'expense', label: `${p.name} (proposed)` }),
+      link: { to: '/more/events', state: { proposal: p.candidate.start } },
     });
   for (const s of hot) {
     const name =

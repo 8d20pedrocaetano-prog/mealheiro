@@ -4,8 +4,9 @@
  * (DATA_MODEL §2), and `transactions/**` never.
  */
 import type { Txn } from '../core/dataset';
-import { nowLocalTimestamp } from '../core/dates';
-import { formatMoneyCsv, type Cents } from '../core/money';
+import { addMonths, nowLocalTimestamp } from '../core/dates';
+import { newEventId } from '../core/eventStats';
+import { formatMoneyCsv, parseUserAmount, type Cents } from '../core/money';
 import type { Model } from '../core/model';
 import { escapeRegex, newRuleRow, type RuleDraft } from '../core/ruleTools';
 import { CASH_CATEGORY, itemisedFor } from '../core/review';
@@ -269,3 +270,185 @@ export function mergeCategory(m: Model, from: string, to: string): NewOp[] {
   ops.push({ file: 'categories.csv', kind: 'delete', key: { id: from }, label });
   return ops;
 }
+
+/* ───────────── Events (SPEC §4.5) ───────────── */
+
+export interface EventDraft {
+  id?: string;
+  name: string;
+  type: 'trip' | 'work-trip' | 'stage' | 'tag';
+  start: string;
+  end: string;
+  budget: string;
+  color?: string;
+  notes?: string;
+}
+
+function eventRow(m: Model, d: EventDraft, status: 'proposed' | 'confirmed' | 'dismissed', source: string) {
+  const existing = d.id ? m.ds.events.find((e) => e.id === d.id) : undefined;
+  const id = d.id ?? newEventId(m.ds.events, d.start || m.today);
+  const budget = parseUserAmount(d.budget);
+  return {
+    id,
+    row: {
+      name: d.name.trim(),
+      type: d.type,
+      status,
+      start_date: d.start,
+      end_date: d.end,
+      budget: budget === null ? '' : formatMoneyCsv(Math.abs(budget)),
+      color: d.color ?? existing?.color ?? '',
+      source: existing?.source || source,
+      notes: d.notes ?? existing?.notes ?? '',
+      created_at: existing?.created_at || ts().slice(0, 10),
+    },
+  };
+}
+
+/**
+ * Confirm a trip proposal: the event becomes `confirmed` and every ticked transaction gets the event's id;
+ * transactions that pointed at it but are no longer ticked lose it.
+ */
+export function confirmTrip(m: Model, d: EventDraft, ticked: Set<string>): NewOp[] {
+  const { id, row } = eventRow(m, d, 'confirmed', 'detector');
+  const label = `confirm trip "${row.name}"`;
+  const ops: NewOp[] = [{ file: 'events.csv', kind: 'upsert', key: { id }, row, label }];
+  for (const t of m.ds.txns) {
+    const has = m.ds.overrides.get(t.id)?.event_id === id || t.manual?.event_id === id;
+    if (ticked.has(t.id) && !has) ops.push(overrideOp(t, { event_id: id }, label));
+    if (!ticked.has(t.id) && has) {
+      if (t.manual?.event_id === id)
+        ops.push({ file: 'manual.csv', kind: 'upsert', key: { id: t.id }, row: { event_id: '' }, label });
+      if (m.ds.overrides.get(t.id)?.event_id === id) ops.push(overrideOp(t, { event_id: '' }, label));
+    }
+  }
+  return ops;
+}
+
+/** Dismiss: the detector never proposes this range again (DATA_MODEL §7 filter). */
+export function dismissTrip(m: Model, d: EventDraft): NewOp[] {
+  const { id, row } = eventRow(m, d, 'dismissed', 'detector');
+  return [{ file: 'events.csv', kind: 'upsert', key: { id }, row, label: `dismiss trip "${row.name}"` }];
+}
+
+export function saveEvent(m: Model, d: EventDraft): NewOp[] {
+  const existing = d.id ? m.ds.events.find((e) => e.id === d.id) : undefined;
+  const status = (existing?.status as 'proposed' | 'confirmed' | 'dismissed') || 'confirmed';
+  const { id, row } = eventRow(m, d, status, 'user');
+  return [
+    {
+      file: 'events.csv',
+      kind: 'upsert',
+      key: { id },
+      row,
+      label: `${existing ? 'edit' : 'add'} event "${row.name}"`,
+    },
+  ];
+}
+
+/** Removes an event and every assignment to it. */
+export function deleteEvent(m: Model, id: string): NewOp[] {
+  const label = 'delete event';
+  const ops: NewOp[] = [{ file: 'events.csv', kind: 'delete', key: { id }, label }];
+  for (const t of m.ds.txns) {
+    if (m.ds.overrides.get(t.id)?.event_id === id) ops.push(overrideOp(t, { event_id: '' }, label));
+    if (t.manual?.event_id === id)
+      ops.push({ file: 'manual.csv', kind: 'upsert', key: { id: t.id }, row: { event_id: '' }, label });
+  }
+  return ops;
+}
+
+/* ───────────── Budgets and goals (SPEC §4.4) ───────────── */
+
+export interface BudgetDraft {
+  scope: 'category' | 'group' | 'total';
+  target: string;
+  limit: Cents;
+  excludeEvents: boolean;
+}
+
+/**
+ * Set a limit from `month` on (SPEC §4.4): a new row starting that month, or the row that already starts
+ * that month is updated. Older rows stay, so past months keep their limits.
+ */
+export function setBudget(m: Model, d: BudgetDraft, month: string): NewOp[] {
+  const same = m.ds.budgets.find(
+    (b) => b.scope === d.scope && b.target === d.target && b.start_month === month,
+  );
+  const id = same?.id ?? `b-${crypto.randomUUID().slice(0, 8)}`;
+  const label = `set budget ${d.target}`;
+  const ops: NewOp[] = [
+    {
+      file: 'budgets.csv',
+      kind: 'upsert',
+      key: { id },
+      row: {
+        scope: d.scope,
+        target: d.target,
+        monthly_limit: formatMoneyCsv(Math.abs(d.limit)),
+        start_month: month,
+        end_month: '',
+        exclude_events: d.excludeEvents ? 'true' : 'false',
+        notes: same?.notes ?? '',
+      },
+      label,
+    },
+  ];
+  // a row that started later would hide this one from its start on; it was set for a future month
+  for (const b of m.ds.budgets)
+    if (b.scope === d.scope && b.target === d.target && b.start_month > month)
+      ops.push({ file: 'budgets.csv', kind: 'delete', key: { id: b.id }, label });
+  return ops;
+}
+
+/** Stop a budget from `month` on: rows that started earlier end the month before; later ones go. */
+export function stopBudget(m: Model, scope: string, target: string, month: string): NewOp[] {
+  const label = `stop budget ${target}`;
+  const prev = addMonths(month, -1);
+  const ops: NewOp[] = [];
+  for (const b of m.ds.budgets) {
+    if (b.scope !== scope || b.target !== target) continue;
+    if (b.start_month >= month) ops.push({ file: 'budgets.csv', kind: 'delete', key: { id: b.id }, label });
+    else if (!b.end_month || b.end_month >= month)
+      ops.push({ file: 'budgets.csv', kind: 'upsert', key: { id: b.id }, row: { end_month: prev }, label });
+  }
+  return ops;
+}
+
+export interface GoalDraft {
+  id?: string;
+  name: string;
+  target: Cents;
+  targetDate: string;
+  basis: string;
+  startDate: string;
+  startAmount: Cents;
+  notes?: string;
+}
+
+export function saveGoal(m: Model, d: GoalDraft): NewOp[] {
+  const existing = d.id ? m.ds.goals.find((g) => g.id === d.id) : undefined;
+  const id = d.id ?? `g-${crypto.randomUUID().slice(0, 8)}`;
+  return [
+    {
+      file: 'goals.csv',
+      kind: 'upsert',
+      key: { id },
+      row: {
+        name: d.name.trim(),
+        target_amount: formatMoneyCsv(Math.abs(d.target)),
+        target_date: d.targetDate,
+        basis: d.basis,
+        start_date: d.startDate,
+        start_amount: formatMoneyCsv(d.startAmount),
+        priority: existing?.priority ?? String(m.ds.goals.length + 1),
+        notes: d.notes ?? existing?.notes ?? '',
+      },
+      label: `${existing ? 'edit' : 'add'} goal "${d.name.trim()}"`,
+    },
+  ];
+}
+
+export const deleteGoal = (id: string): NewOp[] => [
+  { file: 'goals.csv', kind: 'delete', key: { id }, label: 'delete goal' },
+];

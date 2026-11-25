@@ -110,3 +110,32 @@ export function CategoryIcon({
   const I = ICONS[name] ?? Tag;
   return <I size={size} className={className} aria-hidden="true" strokeWidth={1.9} />;
 }
+
+/** All icons a category can use, one tile each. */
+export function IconPicker({ value, onPick }: { value: string; onPick: (name: string) => void }) {
+  const seen = new Set<LucideIcon>();
+  const names = Object.keys(ICONS).filter((n) => {
+    if (seen.has(ICONS[n])) return false;
+    seen.add(ICONS[n]);
+    return true;
+  });
+  return (
+    <div className="grid grid-cols-6 gap-1" role="radiogroup" aria-label="Icon">
+      {names.map((n) => (
+        <button
+          key={n}
+          type="button"
+          role="radio"
+          aria-checked={value === n}
+          aria-label={n}
+          onClick={() => onPick(n)}
+          className={`flex size-11 items-center justify-center rounded-xl ${
+            value === n ? 'bg-accent-soft text-accent' : 'text-ink-2 hover:bg-surface-2'
+          }`}
+        >
+          <CategoryIcon name={n} size={20} />
+        </button>
+      ))}
+    </div>
+  );
+}

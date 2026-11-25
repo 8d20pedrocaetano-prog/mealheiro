@@ -7,7 +7,7 @@ import type { CsvTable } from '../core/csv';
 import { parseTables, type FileMap } from '../core/dataset';
 import { nowLocalTimestamp, todayIso } from '../core/dates';
 import { buildModel, type Model } from '../core/model';
-import { parseSettings, type RootFile, type Settings } from '../core/schema';
+import { parseSettings, type RootFile, type Settings, APP_WRITABLE } from '../core/schema';
 import { isValidPin, seal, unseal } from '../sync/crypto';
 import { GitHub, GitHubError, type RepoRef } from '../sync/github';
 import { applyOps, applyOp, commitMessage, serializeTable, type Op } from '../sync/ops';
@@ -229,6 +229,9 @@ export const useApp = create<AppState>((set, get) => {
     },
 
     async commit(partial) {
+      // File ownership (DATA_MODEL §2): the app writes only user-owned root files, never transactions/**.
+      const bad = partial.find((p) => !APP_WRITABLE.includes(p.file));
+      if (bad) throw new Error(`The app may not write ${bad.file}`);
       const at = nowLocalTimestamp();
       const ops: Op[] = partial.map((p) => ({ ...p, id: crypto.randomUUID(), at }));
       if (get().source?.kind === 'github') {

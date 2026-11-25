@@ -5,6 +5,8 @@ import { Shell } from './Shell';
 import { Activity } from './screens/Activity';
 import { Connect } from './screens/Connect';
 import { Home } from './screens/Home';
+import { Review } from './screens/Review';
+import { AccountsSettings, CategoriesSettings, RulesSettings } from './screens/Settings';
 import { ImportHistory } from './screens/ImportHistory';
 import { Insights } from './screens/Insights';
 import { Lock } from './screens/Lock';
@@ -73,6 +75,10 @@ function Routed() {
         <Route path="plan" element={<Placeholder title="Plan" milestone="M4" />} />
         <Route path="more" element={<More />} />
         <Route path="more/import" element={<ImportHistory />} />
+        <Route path="more/review" element={<Review />} />
+        <Route path="more/accounts" element={<AccountsSettings />} />
+        <Route path="more/categories" element={<CategoriesSettings />} />
+        <Route path="more/rules" element={<RulesSettings />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
     </Routes>

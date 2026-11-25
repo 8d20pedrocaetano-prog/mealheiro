@@ -1,5 +1,5 @@
 import * as Dialog from '@radix-ui/react-dialog';
-import { X } from 'lucide-react';
+import { ChevronLeft, X } from 'lucide-react';
 import type { ReactNode } from 'react';
 
 /**
@@ -12,6 +12,7 @@ export function Sheet({
   description,
   children,
   footer,
+  onBack,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -19,6 +20,8 @@ export function Sheet({
   description?: string;
   children: ReactNode;
   footer?: ReactNode;
+  /** Shows a back arrow (for sub-views inside one sheet). */
+  onBack?: () => void;
 }) {
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
@@ -30,6 +33,16 @@ export function Sheet({
         >
           <div className="mx-auto mt-2 h-1 w-10 rounded-full bg-line lg:hidden" aria-hidden="true" />
           <div className="flex items-start gap-3 px-4 pt-3 pb-2">
+            {onBack && (
+              <button
+                type="button"
+                onClick={onBack}
+                className="-ml-2 flex size-11 shrink-0 items-center justify-center rounded-full text-ink-2 hover:bg-surface-2"
+                aria-label="Back"
+              >
+                <ChevronLeft size={22} />
+              </button>
+            )}
             <div className="min-w-0 flex-1">
               <Dialog.Title className="truncate text-lg font-semibold">{title}</Dialog.Title>
               {description ? (

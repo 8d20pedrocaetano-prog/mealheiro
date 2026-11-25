@@ -14,6 +14,7 @@ export function SyncBadge() {
       <span
         className="rounded-full bg-warn-soft px-2 py-0.5 text-xs font-medium text-warn"
         title="Demo data, edits stay in memory"
+        data-testid="sync-badge"
       >
         Demo{pending ? ` · ${pending} edit${pending === 1 ? '' : 's'} in memory` : ''}
       </span>

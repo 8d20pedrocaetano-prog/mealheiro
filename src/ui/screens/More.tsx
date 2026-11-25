@@ -1,11 +1,34 @@
-import { ChevronRight, Database, LogOut, RefreshCw, Upload } from 'lucide-react';
+import {
+  ChevronRight,
+  Database,
+  Inbox,
+  ListFilter,
+  LogOut,
+  RefreshCw,
+  Tags,
+  Upload,
+  Wallet,
+} from 'lucide-react';
 import { useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { useApp, useModel } from '../../state/store';
 import { Card } from '../components/ui';
-import { fmtDate } from '../lib/format';
+import { fmtDate, plural } from '../lib/format';
+import { badgeCount } from '../lib/review';
 
-function Item({ to, icon, label, sub }: { to: string; icon: ReactNode; label: string; sub?: string }) {
+function Item({
+  to,
+  icon,
+  label,
+  sub,
+  badge,
+}: {
+  to: string;
+  icon: ReactNode;
+  label: string;
+  sub?: string;
+  badge?: number;
+}) {
   return (
     <Link to={to} className="flex min-h-14 items-center gap-3 px-4 py-2 hover:bg-surface-2">
       <span className="text-ink-2">{icon}</span>
@@ -13,6 +36,11 @@ function Item({ to, icon, label, sub }: { to: string; icon: ReactNode; label: st
         <span className="block font-medium">{label}</span>
         {sub && <span className="block text-xs text-ink-3">{sub}</span>}
       </span>
+      {!!badge && (
+        <span className="num rounded-full bg-accent px-2 py-0.5 text-xs font-semibold text-accent-ink">
+          {badge}
+        </span>
+      )}
       <ChevronRight size={18} className="text-ink-3" />
     </Link>
   );
@@ -28,6 +56,7 @@ export function More() {
   const syncNow = useApp((s) => s.syncNow);
   const lock = useApp((s) => s.lock);
   const [confirmWipe, setConfirmWipe] = useState(false);
+  const review = badgeCount(m);
   const lastImport = m.ds.imports
     .map((i) => i.imported_at.slice(0, 10))
     .sort()
@@ -38,10 +67,33 @@ export function More() {
       <h1 className="text-xl font-semibold">More</h1>
       <Card className="divide-y divide-line overflow-hidden">
         <Item
+          to="/more/review"
+          icon={<Inbox size={20} />}
+          label="Review"
+          sub={review ? `${plural(review, 'item')} need you` : 'Inbox clear'}
+          badge={review}
+        />
+        <Item
           to="/more/import"
           icon={<Upload size={20} />}
           label="Imports"
           sub={lastImport ? `Last import ${fmtDate(lastImport)}` : 'No imports yet'}
+        />
+      </Card>
+
+      <Card className="divide-y divide-line overflow-hidden">
+        <Item
+          to="/more/accounts"
+          icon={<Wallet size={20} />}
+          label="Accounts"
+          sub="Tracked or not, balances"
+        />
+        <Item to="/more/categories" icon={<Tags size={20} />} label="Categories" sub="Add, rename, merge" />
+        <Item
+          to="/more/rules"
+          icon={<ListFilter size={20} />}
+          label="Rules"
+          sub={`${plural(m.ds.rules.length, 'rule')}, in order`}
         />
       </Card>
 

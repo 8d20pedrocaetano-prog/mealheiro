@@ -22,6 +22,7 @@ describe('performance (10 years × 1,000 transactions)', () => {
     const [m, buildMs] = time(() => buildModel(tables, settings, '2026-10-31'));
     const [, reviewMs] = time(() => reviewCards(m));
     const [, budgetMs] = time(() => budgetStatuses(m.view, m.lines, '2026-10', m.today));
+    // eslint-disable-next-line no-console -- the timings are this test's report
     console.log(
       `txns=${m.ds.txns.length} parse=${parseMs.toFixed(0)}ms model=${buildMs.toFixed(0)}ms review=${reviewMs.toFixed(0)}ms budgets=${budgetMs.toFixed(0)}ms`,
     );

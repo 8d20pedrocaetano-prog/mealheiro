@@ -11,6 +11,7 @@ import { recurringDetails } from '../../core/recurring';
 import { effOf } from '../../core/view';
 import { EChart, type EChartsOption } from '../charts/EChart';
 import { useColorScheme } from '../charts/useColorScheme';
+import { DataTable, ViewToggle } from '../components/DataTable';
 import { Card, CardTitle, Empty } from '../components/ui';
 import { activityHref, openActivity, type TxnFilter } from '../lib/filter';
 import { fmtDate, fmtMonth, fmtPct, formatEUR } from '../lib/format';
@@ -151,6 +152,7 @@ export function MoneyFlow({
 }) {
   const scheme = useColorScheme();
   const navigate = useNavigate();
+  const [table, setTable] = useState(false);
   const flow = useMemo(() => {
     const dark = scheme === 'dark';
     const th = chartTheme(dark);
@@ -272,11 +274,34 @@ export function MoneyFlow({
     };
   }, [flow, scheme]);
 
+  const nodeOf = (name: string) => flow.nodes.find((x) => x.name === name);
   return (
     <Card>
-      <CardTitle>Money flow</CardTitle>
+      <CardTitle action={!flow.empty && <ViewToggle table={table} onChange={setTable} what="money flow" />}>
+        Money flow
+      </CardTitle>
       {flow.empty ? (
         <Empty>No money moved in this period.</Empty>
+      ) : table ? (
+        <DataTable
+          caption={`Money flow, ${period.label}`}
+          testId="flow-table"
+          columns={[{ label: 'From' }, { label: 'To' }, { label: 'Amount', num: true }]}
+          rows={flow.links.map((l) => {
+            const incoming = l.target === 'Money in';
+            const name = incoming ? l.source : l.target;
+            const f = nodeOf(name)?.f;
+            const cell = f ? (
+              <Link {...activityHref({ ...f, label: `${name} · ${period.label}` })} className="text-accent">
+                {name}
+              </Link>
+            ) : (
+              name
+            );
+            const amount = formatEUR(Math.round(l.value * 100));
+            return incoming ? [cell, 'Money in', amount] : ['Money in', cell, amount];
+          })}
+        />
       ) : (
         <div className="px-2 pb-2">
           <EChart
@@ -316,6 +341,7 @@ export function CalendarHeat({
 }) {
   const scheme = useColorScheme();
   const dark = scheme === 'dark';
+  const [table, setTable] = useState(false);
   const to = period.to > m.today ? m.today : period.to;
   const months = useMemo(
     () => monthRange(period.from.slice(0, 7), to.slice(0, 7)).slice(-12),
@@ -349,93 +375,148 @@ export function CalendarHeat({
     : 'repeating-linear-gradient(135deg, rgba(0,0,0,.5) 0 1.5px, transparent 1.5px 5px)';
   const total = [...daily.values()].reduce((s, v) => s + v, 0);
   const days = Math.max(1, dayNum(to) - dayNum(from) + 1);
+  const byMonth = useMemo(
+    () =>
+      months.map((ym) => {
+        let spent = 0;
+        let top: [string, number] | null = null;
+        let n = 0;
+        for (const [d, v] of daily) {
+          if (!d.startsWith(ym)) continue;
+          spent += v;
+          if (v > 0) n++;
+          if (v > 0 && (!top || v > top[1])) top = [d, v];
+        }
+        return { ym, spent, n, top };
+      }),
+    [months, daily],
+  );
 
   return (
     <Card className="lg:col-span-2">
-      <CardTitle>Spending by day</CardTitle>
+      <CardTitle action={<ViewToggle table={table} onChange={setTable} what="spending by day" />}>
+        Spending by day
+      </CardTitle>
       <p className="-mt-1 px-4 text-xs text-ink-3">
         {formatEUR(Math.round(total / days))} a day on average
         {months.length === 12 && monthRange(period.from.slice(0, 7), to.slice(0, 7)).length > 12
           ? ' · last 12 months shown'
           : ''}
       </p>
-      <div
-        className="grid grid-cols-2 gap-x-4 gap-y-3 px-4 py-3 sm:grid-cols-3 lg:grid-cols-4"
-        data-testid="calendar"
-      >
-        {months.map((ym) => {
-          const first = new Date(`${ym}-01T00:00:00Z`).getUTCDay();
-          const pad = (first + 6) % 7;
-          const n = Number(lastDay(ym).slice(8, 10));
-          return (
-            <div key={ym}>
-              <div className="mb-1 text-xs font-medium text-ink-2">{fmtMonth(ym)}</div>
-              <div className="grid grid-cols-7 gap-[2px]">
-                {WEEKDAYS.map((w, i) => (
-                  <span key={i} className="text-center text-[10px] leading-4 text-ink-3" aria-hidden>
-                    {w}
-                  </span>
-                ))}
-                {Array.from({ length: pad }, (_, i) => (
-                  <span key={`p${i}`} />
-                ))}
-                {Array.from({ length: n }, (_, i) => {
-                  const d = `${ym}-${String(i + 1).padStart(2, '0')}`;
-                  const out = d < from || d > to;
-                  const v = daily.get(d) ?? 0;
-                  const trip = tripDays.get(d);
-                  const label = `${fmtDate(d)}: ${formatEUR(Math.max(0, v))} spent${trip ? ` · ${trip}` : ''}`;
-                  if (out)
-                    return (
-                      <span
-                        key={d}
-                        className="aspect-square rounded-[3px] border border-dashed border-line"
-                      />
-                    );
-                  return (
-                    <Link
-                      key={d}
-                      {...activityHref({
-                        from: d,
-                        to: d,
-                        kind: 'expense',
-                        gross: gross || undefined,
-                        label: fmtDate(d),
-                      })}
-                      title={label}
-                      aria-label={label}
-                      className="aspect-square rounded-[3px]"
-                      style={{
-                        backgroundColor: colorOf(v),
-                        backgroundImage: trip ? hatch : undefined,
-                      }}
-                    />
-                  );
+      {table ? (
+        <DataTable
+          caption="Spending per month, with the busiest day"
+          testId="calendar-table"
+          columns={[
+            { label: 'Month' },
+            { label: 'Spent', num: true },
+            { label: 'Days with spending', num: true },
+            { label: 'Busiest day', num: true },
+          ]}
+          rows={byMonth.map((r) => [
+            fmtMonth(r.ym),
+            formatEUR(Math.max(0, r.spent)),
+            r.n,
+            r.top ? (
+              <Link
+                {...activityHref({
+                  from: r.top[0],
+                  to: r.top[0],
+                  kind: 'expense',
+                  gross: gross || undefined,
+                  label: fmtDate(r.top[0]),
                 })}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-      <div
-        className="flex flex-wrap items-center gap-x-4 gap-y-1 px-4 pb-3 text-xs text-ink-2"
-        aria-label="Legend"
-      >
-        <span className="flex items-center gap-1">
-          Less
-          {['var(--surface-2)', ...ramp].map((c) => (
-            <span key={c} className="size-3 rounded-[3px]" style={{ backgroundColor: c }} />
-          ))}
-          More
-        </span>
-        <span className="flex items-center gap-1">
-          <span
-            className="size-3 rounded-[3px]"
-            style={{ backgroundColor: ramp[1], backgroundImage: hatch }}
-          />
-          Trip day
-        </span>
-      </div>
+                className="text-accent"
+              >
+                {fmtDate(r.top[0])}: {formatEUR(r.top[1])}
+                {tripDays.get(r.top[0]) ? ` (${tripDays.get(r.top[0])})` : ''}
+              </Link>
+            ) : (
+              '—'
+            ),
+          ])}
+        />
+      ) : (
+        <>
+          <div
+            className="grid grid-cols-2 gap-x-4 gap-y-3 px-4 py-3 sm:grid-cols-3 lg:grid-cols-4"
+            data-testid="calendar"
+          >
+            {months.map((ym) => {
+              const first = new Date(`${ym}-01T00:00:00Z`).getUTCDay();
+              const pad = (first + 6) % 7;
+              const n = Number(lastDay(ym).slice(8, 10));
+              return (
+                <div key={ym}>
+                  <div className="mb-1 text-xs font-medium text-ink-2">{fmtMonth(ym)}</div>
+                  <div className="grid grid-cols-7 gap-[2px]">
+                    {WEEKDAYS.map((w, i) => (
+                      <span key={i} className="text-center text-[10px] leading-4 text-ink-3" aria-hidden>
+                        {w}
+                      </span>
+                    ))}
+                    {Array.from({ length: pad }, (_, i) => (
+                      <span key={`p${i}`} />
+                    ))}
+                    {Array.from({ length: n }, (_, i) => {
+                      const d = `${ym}-${String(i + 1).padStart(2, '0')}`;
+                      const out = d < from || d > to;
+                      const v = daily.get(d) ?? 0;
+                      const trip = tripDays.get(d);
+                      const label = `${fmtDate(d)}: ${formatEUR(Math.max(0, v))} spent${trip ? ` · ${trip}` : ''}`;
+                      if (out)
+                        return (
+                          <span
+                            key={d}
+                            className="aspect-square rounded-[3px] border border-dashed border-line"
+                          />
+                        );
+                      return (
+                        <Link
+                          key={d}
+                          {...activityHref({
+                            from: d,
+                            to: d,
+                            kind: 'expense',
+                            gross: gross || undefined,
+                            label: fmtDate(d),
+                          })}
+                          title={label}
+                          aria-label={label}
+                          className="aspect-square rounded-[3px]"
+                          style={{
+                            backgroundColor: colorOf(v),
+                            backgroundImage: trip ? hatch : undefined,
+                          }}
+                        />
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          <div
+            className="flex flex-wrap items-center gap-x-4 gap-y-1 px-4 pb-3 text-xs text-ink-2"
+            aria-label="Legend"
+          >
+            <span className="flex items-center gap-1">
+              Less
+              {['var(--surface-2)', ...ramp].map((c) => (
+                <span key={c} className="size-3 rounded-[3px]" style={{ backgroundColor: c }} />
+              ))}
+              More
+            </span>
+            <span className="flex items-center gap-1">
+              <span
+                className="size-3 rounded-[3px]"
+                style={{ backgroundColor: ramp[1], backgroundImage: hatch }}
+              />
+              Trip day
+            </span>
+          </div>
+        </>
+      )}
     </Card>
   );
 }

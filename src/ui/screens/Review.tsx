@@ -19,6 +19,7 @@ import { CashItemiser } from '../components/CashItemiser';
 import { CategoryGrid } from '../components/CategoryGrid';
 import { RuleEditor } from '../components/RuleEditor';
 import { Sheet } from '../components/Sheet';
+import { NoDataYet } from '../components/Onboarding';
 import { Button, Card, Field, Switch, inputCls } from '../components/ui';
 import { categoryName } from '../lib/categories';
 import { fmtDate, formatEUR, plural } from '../lib/format';
@@ -305,6 +306,8 @@ export function Review() {
             Later <ChevronRight size={16} />
           </button>
         </>
+      ) : m.ds.txns.length === 0 ? (
+        <NoDataYet what="Nothing to review yet. After an import, the transactions the rules can't place, and the people behind transfers, wait here for you." />
       ) : (
         <Card className="flex flex-col items-center gap-2 p-8 text-center">
           <CheckCheck size={32} className="text-good" />

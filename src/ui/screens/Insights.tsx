@@ -1,3 +1,4 @@
+import { ChevronRight } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { isGrossLine, netSpent, type Line } from '../../core/aggregates';
@@ -8,6 +9,8 @@ import { useModel } from '../../state/store';
 import { comparePeriod, elapsed, periodPresets, type CompareMode, type Period } from '../lib/period';
 import { CalendarHeat, CompareCard, Delta, MoneyFlow, Recurring } from './InsightsPanels';
 import { EChart, type EChartsOption } from '../charts/EChart';
+import { DataTable, ViewToggle } from '../components/DataTable';
+import { NoDataYet } from '../components/Onboarding';
 import { useColorScheme } from '../charts/useColorScheme';
 import { Card, CardTitle, Chip, Empty, Segmented } from '../components/ui';
 import { activityHref, monthRangeFilter, openActivity } from '../lib/filter';
@@ -55,9 +58,28 @@ export function Insights() {
   }, [cmp, base, period, m]);
   const stages = m.ds.events.filter((e) => e.type === 'stage' && e.status === 'confirmed');
 
+  if (!m.months.length)
+    return (
+      <div className="flex flex-col gap-4">
+        <h1 className="text-xl font-semibold">Insights</h1>
+        <NoDataYet what="Charts of where your money goes appear here after your first import." />
+      </div>
+    );
+
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="text-xl font-semibold">Insights</h1>
+      <div className="flex items-center justify-between gap-2">
+        <h1 className="text-xl font-semibold">Insights</h1>
+        {m.months.length > 0 && (
+          <Link
+            to="/insights/year"
+            className="-my-2 flex min-h-11 items-center gap-1 text-sm text-accent"
+            data-testid="year-link"
+          >
+            Year in review <ChevronRight size={16} aria-hidden="true" />
+          </Link>
+        )}
+      </div>
       <div className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4">
         {presets.map((p) => (
           <Chip key={p.id} active={period.id === p.id} onClick={() => setPeriodId(p.id)}>
@@ -255,6 +277,7 @@ function OverTime({ m, period, lines, gross }: { m: Model; period: Period; lines
       },
       yAxis: {
         type: 'value',
+        minInterval: 1,
         splitLine: { lineStyle: { color: th.grid } },
         axisLabel: { color: th.ink3, formatter: (v: number) => formatEURShort(v * 100) },
       },
@@ -297,6 +320,7 @@ function OverTime({ m, period, lines, gross }: { m: Model; period: Period; lines
       },
       yAxis: {
         type: 'value',
+        minInterval: 1,
         splitLine: { lineStyle: { color: th.grid } },
         axisLabel: { color: th.ink3, formatter: '{value}%' },
       },
@@ -319,13 +343,7 @@ function OverTime({ m, period, lines, gross }: { m: Model; period: Period; lines
     : keys.map((k, i) => ({ k, name: k, i }));
   return (
     <Card className="lg:col-span-2">
-      <CardTitle
-        action={
-          <button className="text-sm text-accent" onClick={() => setTable(!table)}>
-            {table ? 'Chart' : 'Table'}
-          </button>
-        }
-      >
+      <CardTitle action={<ViewToggle table={table} onChange={setTable} what="spending over time" />}>
         Spending over time
       </CardTitle>
       <div className="px-4 pb-1">
@@ -344,30 +362,26 @@ function OverTime({ m, period, lines, gross }: { m: Model; period: Period; lines
         </select>
       </div>
       {table ? (
-        <div className="overflow-x-auto px-4 pb-3">
-          <table className="num w-full text-sm">
-            <thead className="text-left text-ink-2">
-              <tr>
-                <th className="py-1 font-medium">Month</th>
-                <th className="py-1 text-right font-medium">Income</th>
-                <th className="py-1 text-right font-medium">Spent</th>
-                <th className="py-1 text-right font-medium">Saved</th>
-                <th className="py-1 text-right font-medium">Rate</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-line">
-              {series.map((s) => (
-                <tr key={s.month}>
-                  <td className="py-1.5">{fmtMonthShort(s.month)}</td>
-                  <td className="py-1.5 text-right">{formatEUR(s.income)}</td>
-                  <td className="py-1.5 text-right">{formatEUR(s.spent)}</td>
-                  <td className="py-1.5 text-right">{formatEUR(s.saved)}</td>
-                  <td className="py-1.5 text-right">{s.income ? fmtPct(s.saved / s.income) : '—'}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <DataTable
+          caption="Income, spending, saved and savings rate per month"
+          testId="overtime-table"
+          columns={[
+            { label: 'Month' },
+            { label: 'Income', num: true },
+            { label: 'Spent', num: true },
+            ...keys.map((k) => ({ label: focus ? (m.ds.categories.get(k)?.name ?? k) : k, num: true })),
+            { label: 'Saved', num: true },
+            { label: 'Rate', num: true },
+          ]}
+          rows={series.map((s) => [
+            fmtMonthShort(s.month),
+            formatEUR(s.income),
+            formatEUR(s.spent),
+            ...keys.map((k) => formatEUR(Math.max(0, s.byGroup.get(k) ?? 0))),
+            formatEUR(s.saved),
+            s.income ? fmtPct(s.saved / s.income) : '—',
+          ])}
+        />
       ) : (
         <>
           <div className="flex flex-wrap gap-x-3 gap-y-1 px-4 py-1 text-xs text-ink-2" aria-label="Legend">

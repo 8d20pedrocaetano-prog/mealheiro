@@ -12,6 +12,7 @@ import { effOf } from '../../core/view';
 import { confirmTrip, deleteEvent, dismissTrip, saveEvent, type EventDraft } from '../../state/edits';
 import { useApp, useModel } from '../../state/store';
 import { BudgetBar } from '../components/BudgetBar';
+import { DataTable, ViewToggle } from '../components/DataTable';
 import { Sheet } from '../components/Sheet';
 import { TxnDetail } from '../components/TxnDetail';
 import { TxnRow } from '../components/TxnRow';
@@ -369,7 +370,12 @@ export function Events() {
 
       <Card>
         <CardTitle>Your events</CardTitle>
-        {events.length === 0 && <Empty>No events yet.</Empty>}
+        {events.length === 0 && (
+          <Empty>
+            No events yet. Trips appear here on their own: after an import, Mealheiro proposes one when it
+            sees days of spending away from home. Use Add for a trip, a life stage or a tag of your own.
+          </Empty>
+        )}
         <ul className="divide-y divide-line pb-1">
           {events.map((e) => (
             <li key={e.id}>
@@ -472,6 +478,7 @@ export function EventPage() {
 function TripBody({ e, onOpen }: { e: EventRow; onOpen: (t: Txn) => void }) {
   const m = useModel();
   const scheme = useColorScheme();
+  const [byDayTable, setByDayTable] = useState(false);
   const s = useMemo(() => tripSummary(m, e), [m, e]);
   const members = useMemo(
     () => eventMembers(m.view, e, m.today).sort((a, b) => (a.value_date < b.value_date ? 1 : -1)),
@@ -497,6 +504,7 @@ function TripBody({ e, onOpen }: { e: EventRow; onOpen: (t: Txn) => void }) {
       },
       yAxis: {
         type: 'value',
+        minInterval: 1,
         splitLine: { lineStyle: { color: th.grid } },
         axisLabel: { color: th.ink3, formatter: (v: number) => formatEURShort(v * 100) },
       },
@@ -543,8 +551,22 @@ function TripBody({ e, onOpen }: { e: EventRow; onOpen: (t: Txn) => void }) {
         </Card>
       )}
       <Card>
-        <CardTitle>By day</CardTitle>
-        <EChart option={option} height={200} ariaLabel="Spending per day of the trip" />
+        <CardTitle
+          action={<ViewToggle table={byDayTable} onChange={setByDayTable} what="spending per day" />}
+        >
+          By day
+        </CardTitle>
+        {byDayTable ? (
+          <DataTable
+            caption={`Spending per day of ${e.name}`}
+            testId="trip-day-table"
+            columns={[{ label: 'Day' }, { label: 'Spent', num: true }]}
+            rows={s.byDay.map((c, i) => [fmtDay(addDays(e.start_date, i)), formatEUR(c)])}
+            footer={['Total', formatEUR(s.byDay.reduce((a, c) => a + c, 0))]}
+          />
+        ) : (
+          <EChart option={option} height={200} ariaLabel="Spending per day of the trip" />
+        )}
       </Card>
       <Card>
         <CardTitle

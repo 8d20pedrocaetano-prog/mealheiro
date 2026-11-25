@@ -2,7 +2,10 @@ import type React from 'react';
 import type { ReactNode } from 'react';
 
 export function Card({ children, className = '' }: { children: ReactNode; className?: string }) {
-  return <section className={`rounded-2xl border border-line bg-surface ${className}`}>{children}</section>;
+  // min-w-0: a wide table inside scrolls within the card instead of stretching a grid column
+  return (
+    <section className={`min-w-0 rounded-2xl border border-line bg-surface ${className}`}>{children}</section>
+  );
 }
 
 export function CardTitle({ children, action }: { children: ReactNode; action?: ReactNode }) {

@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__hearthbot__read_original_project_chat"
+    ]
+  }
+}
